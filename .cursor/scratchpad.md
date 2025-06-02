@@ -68,50 +68,52 @@ The user aims to develop a Next.js-based Progressive Web App (PWA) called "Recip
 **Phase 1: Core MVP - Grocery Photo to Recipe**
 
 1.  **Project Setup & Basic UI (Next.js, Shadcn UI, PWA Basics):**
-    *   [x] Initialize Next.js project (already done).
-    *   [x] Integrate Shadcn UI. (User confirmed setup)
-    *   [x] Setup basic PWA manifest and service worker. (Manifest linked, next-pwa configured)
-    *   [c] Design mobile-first layouts for core screens (Dashboard, Pantry, Capture, Recipe List, Recipe Detail). (Placeholder pages created, bottom navigation updated, FAB added. Pantry page refactored to card layout with expiry logic.)
+    *   [x] Initialize Next.js project.
+    *   [x] Integrate Shadcn UI.
+    *   [x] Setup basic PWA manifest and service worker.
+    *   [c] Design mobile-first layouts for core screens (Dashboard, Pantry, Capture, Recipe List, Recipe Detail).
+        *   Pantry page UI updated with card layout, SI units, expiry logic (display only).
+        *   Account page created (displays email, sign-out button).
+        *   Bottom navigation bar implemented (`src/app/_components/bottom-navbar.tsx`) with 3 items: "Recipes" (links to `/recipes`), "Pantry", "Account".
+        *   Floating Action Button (FAB) for "Capture" removed; "Capture Ingredients" button added to Pantry page.
+        *   Recipe Detail page (`recipe/[id]`) styled with full-width image, overlay header buttons (Back, Favorite), and content flowing below, inspired by Airbnb design. Links to recipe detail page updated from `/recipes/[id]` to `/recipe/[id]`. Back button now links to `/recipes`.
     *   **Success Criterion:** Basic app shell runs as a PWA, navigates between placeholder screens with basic themed UI.
-2.  **User Authentication (Supabase Auth - User Confirmed Setup):**
-    *   [x] Configure Supabase Auth (email/password, potentially social logins). (User confirmed setup)
-    *   [ ] Ensure frontend components for login/signup are integrated with Supabase Auth actions (`src/actions/auth.ts`).
-    *   [ ] Implement logic to protect relevant pages/API routes based on Supabase Auth state.
-    *   [ ] Ensure user session is managed correctly (e.g., using Supabase SSR utilities for Next.js).
+2.  **User Authentication (Supabase Auth):**
+    *   [x] Configure Supabase Auth.
+    *   [c] Frontend components for login/signup integrated with Supabase Auth actions (`src/actions/auth.ts`); `signout` action added.
+    *   [ ] Implement logic to protect relevant pages/API routes.
+    *   [ ] Ensure user session is managed correctly.
     *   **Success Criterion:** Users can sign up, log in, log out, and protected routes are enforced.
 3.  **Grocery Image Upload & Vision API Integration (Backend):**
     *   [ ] Create an API endpoint to receive an image file.
-    *   [ ] Integrate with a chosen cloud vision API (e.g., Google Cloud Vision AI for object/label detection).
+    *   [ ] Integrate with a chosen cloud vision API.
     *   [ ] Process API response to extract potential ingredient names.
-    *   [ ] Basic ingredient name standardization (e.g., lowercase, remove plurals).
+    *   [ ] Basic ingredient name standardization.
     *   **Success Criterion:** Uploaded grocery photo results in a list of detected ingredient names.
 4.  **Ingredient Confirmation UI (Frontend):**
     *   [ ] Display AI-detected ingredients to the user.
-    *   [ ] Allow users to confirm, edit (rename), or delete detected ingredients.
-    *   [ ] Allow users to manually add ingredients the AI missed.
+    *   [ ] Allow users to confirm, edit, or delete detected ingredients.
+    *   [ ] Allow users to manually add ingredients.
     *   **Success Criterion:** User can curate an accurate list of available ingredients.
 5.  **Pantry Management (Backend & DB):**
-    *   [ ] Define Drizzle schema for `User`, `PantryItem` (user_id, ingredient_name, quantity, added_date, (optional) expiry_date, category, imageUrl).
-    *   [ ] API endpoints to save/update/delete the user's pantry items.
-    *   [c] Basic UI to view current pantry (Placeholder `pantry/page.tsx` updated to card layout with expiry logic and dummy images).
-    *   **Success Criterion:** Confirmed ingredients are saved to the user's pantry in the database and can be viewed with appropriate UI.
+    *   [ ] Define Drizzle schema for `User`, `PantryItem`.
+    *   [ ] API endpoints to save/update/delete pantry items.
+    *   [c] Basic UI to view current pantry (`pantry/page.tsx` updated to card layout).
+    *   **Success Criterion:** Confirmed ingredients are saved and viewable.
 6.  **Recipe API Integration & Basic Matching:**
-    *   [ ] Choose and integrate a recipe API (e.g., Spoonacular, Edamam - free tier if possible).
-    *   [ ] API endpoint that takes the user's pantry ingredients and queries the recipe API.
-    *   [ ] Simple matching: Find recipes that use *only* ingredients from the user's pantry.
-    *   **Success Criterion:** App displays a list of recipes cookable with current pantry items.
+    *   [ ] Choose and integrate a recipe API.
+    *   [ ] API endpoint for recipe queries based on pantry.
+    *   [ ] Simple matching logic.
+    *   **Success Criterion:** App displays recipes from API based on pantry.
 7.  **Recipe Display:**
-    *   [ ] UI to list recipe results (image, title, basic info).
-    *   [ ] UI for a recipe detail view (ingredients, instructions, source URL).
-    *   **Success Criterion:** User can view and select recipes.
-4.  **UI/UX Refinements for Mobile (Ongoing with each feature):**
-    *   [c] Review and improve all workflows based on mobile usability testing.
-    *   [c] Implement mobile-first navigation (BottomNavbar includes Dashboard, Pantry, Recipes, Account; FAB for Capture).
-    *   [c] Adapt dashboard, pantry (card layout, expiry logic), and other page layouts for mobile, drawing inspiration from user-provided image and best practices.
-    *   [c] Adapt dashboard, pantry, and other page layouts for mobile, drawing inspiration from user-provided image and best practices.
-    *   [c] Implement mobile-first navigation (BottomNavbar created and componentized).
-    *   [c] Adapt dashboard and other page layouts for mobile, drawing inspiration from user-provided image.
-    *   **Success Criterion:** Smoother user experience on mobile devices.
+    *   [c] UI to list recipe results (images, titles, basic info) - `recipes/page.tsx` updated to use dummy data and link to detail page.
+    *   [c] UI for a recipe detail view (`recipes/[id]/page.tsx`):
+        *   Created dummy recipe data (`src/lib/dummy-recipes.ts`) based on Love & Lemons brownie recipe.
+        *   Installed `@use-gesture/react` and `@react-spring/web` for animations.
+        *   Implemented swipeable card stack for recipe instructions (`RecipeStepCards.tsx`).
+        *   Refactored page into Server Component (`page.tsx`) and Client Component (`_components/RecipeDetailClient.tsx`) to handle `useState` for favorite button and other client-side interactions.
+        *   Styled to mimic Airbnb example (full-width image, overlay header buttons, content below).
+    *   **Success Criterion:** User can view recipe lists and detailed recipe pages with interactive instruction steps.
 
 **Phase 2: Enhancements - Recipe OCR, "Buy Extra" Suggestions, Basic Calories**
 
@@ -152,10 +154,24 @@ The user aims to develop a Next.js-based Progressive Web App (PWA) called "Recip
 
 ## Project Status Board
 
-*(Executor to update this section with progress using markdown checklists)*
-
-- [ ] Task 1
-- [ ] Task 2
+- [x] Setup PWA basics and Shadcn UI.
+- [c] Implement basic mobile-first navigation (BottomNavbar).
+- [x] Create placeholder pages for Dashboard, Pantry, Capture, Recipes, Account.
+- [x] Style Pantry page with card layout, SI units, and simplified actions.
+- [x] Create Account page with email display and signout.
+- [x] Update BottomNavbar to 3 items: Recipes (->/recipes), Pantry, Account.
+- [x] Remove FAB; add Capture button to Pantry page.
+- [x] Create dummy recipe data structure and initial brownie recipe.
+- [x] Install gesture/animation libraries (`@use-gesture/react`, `@react-spring/web`).
+- [c] Implement Recipe Detail page (`recipes/[id]`):
+    - [x] Basic structure and data display.
+    - [x] Swipeable card stack for instructions (`RecipeStepCards.tsx`).
+    - [x] Refactor into Server (`page.tsx`) and Client (`_components/RecipeDetailClient.tsx`) components.
+    - [x] Style to mimic Airbnb example (full-width image, overlay header buttons, etc.).
+- [c] Update Recipe List page (`recipes/page.tsx`) to use new dummy data and link to detail page.
+- [x] Corrected navigation links across recipe list, recipe detail, and bottom navigation bar to ensure consistency with route changes (e.g., `/dashboard` to `/recipes`, `/recipes/[id]` to `/recipe/[id]`).
+- [ ] Task: Full Supabase Auth integration (protected routes, session management).
+- [ ] Task: Backend for grocery image upload and vision API call.
 
 ## Executor Feedback or Help Requests
 
@@ -166,6 +182,7 @@ The user aims to develop a Next.js-based Progressive Web App (PWA) called "Recip
 *(Record reusable insights here as the project progresses)*
 - Program output must include debugging information.
 - Read the file before editing it.
+- Dont use legacy behavior in Link
 - When terminal vulnerabilities appear, run `npm audit` first.
 
 ## Current Market Competitors

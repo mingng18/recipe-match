@@ -33,7 +33,7 @@ export default function RecipeDetailClient({ recipe }: RecipeDetailClientProps) 
         )}
         <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10">
           <Button asChild variant="ghost" size="icon" className="bg-black/30 hover:bg-black/50 text-white rounded-full">
-            <Link href="/dashboard">
+            <Link href="/recipes">
               <ArrowLeft size={24} />
             </Link>
           </Button>

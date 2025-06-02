@@ -8,7 +8,7 @@ import clsx from 'clsx';
 
 // Define navigation items
 const navItems = [
-  { href: '/dashboard', label: 'Recipes', icon: Soup },
+  { href: '/recipes', label: 'Recipes', icon: Soup },
   { href: '/pantry', label: 'Pantry', icon: ShoppingBasket },
   { href: '/account', label: 'Account', icon: User },
 ];
@@ -20,7 +20,7 @@ export default function BottomNavbar() {
     <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-md md:hidden z-40">
       <div className="container mx-auto flex justify-around items-center h-16">
         {navItems.map((item) => {
-          const isActive = item.href === '/dashboard' 
+          const isActive = item.href === '/recipes' 
             ? pathname === item.href || pathname.startsWith(item.href + '/')
             : (pathname.startsWith(item.href) && item.href !== '/');
           

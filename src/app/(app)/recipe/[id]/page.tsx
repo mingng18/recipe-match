@@ -21,7 +21,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
       <div className="container mx-auto p-4 text-center flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <p className="text-xl text-muted-foreground">Recipe not found.</p>
         <Button asChild variant="link" className="mt-4">
-          <Link href="/dashboard">Back to Recipes</Link>
+          <Link href="/recipes">Back to Recipes</Link>
         </Button>
       </div>
     );
