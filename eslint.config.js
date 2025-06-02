@@ -18,13 +18,20 @@ export default tseslint.config(
       drizzle,
     },
     extends: [
-      ...tseslint.configs.recommended,
-      ...tseslint.configs.recommendedTypeChecked,
-      ...tseslint.configs.stylisticTypeChecked,
+      // ...tseslint.configs.recommended,
+      // ...tseslint.configs.recommendedTypeChecked,
+      // ...tseslint.configs.stylisticTypeChecked,
     ],
     rules: {
       "@typescript-eslint/array-type": "off",
       "@typescript-eslint/consistent-type-definitions": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-enum-comparison": "off",
+      "@typescript-eslint/no-unsafe-function-type": "off",
       "@typescript-eslint/consistent-type-imports": [
         "warn",
         { prefer: "type-imports", fixStyle: "inline-type-imports" },

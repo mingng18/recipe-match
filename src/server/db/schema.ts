@@ -1,6 +1,5 @@
 import { relations, sql } from "drizzle-orm";
 import { index, pgTableCreator, primaryKey } from "drizzle-orm/pg-core";
-import { type AdapterAccount } from "next-auth/adapters";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -59,7 +58,6 @@ export const accounts = createTable(
       .varchar({ length: 255 })
       .notNull()
       .references(() => users.id),
-    type: d.varchar({ length: 255 }).$type<AdapterAccount["type"]>().notNull(),
     provider: d.varchar({ length: 255 }).notNull(),
     providerAccountId: d.varchar({ length: 255 }).notNull(),
     refresh_token: d.text(),
