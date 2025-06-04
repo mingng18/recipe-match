@@ -4,6 +4,8 @@
 
 The user aims to develop a Next.js-based Progressive Web App (PWA) called "Recipe Matcher". The core idea is to help users discover recipes they can cook based on ingredients they have, identified by uploading photos of a recipe and their groceries. The application will use a vision model to extract ingredient information. The goal is a mobile-first design with rapid development using Shadcn UI and a Next.js backend.
 
+The user wants to enhance the recipe detail page by adding a bottom app bar with a CTA to navigate to a dedicated recipe steps view. This view, using the existing `RecipeStepCards` component, needs to be improved with an initial ingredients checklist card and a progress stepper.
+
 **User's Vision:**
 - Mobile-first design (PWA).
 - Fast iteration using Shadcn UI.
@@ -62,6 +64,12 @@ The user aims to develop a Next.js-based Progressive Web App (PWA) called "Recip
 6.  **Rapid Development vs. Feature Creep:**
     *   **Challenge:** Balancing speed with the scope of features.
     *   **Analysis:** Prioritize core MVP features, then iterate.
+
+*   **Component Reusability vs. Specificity**: `RecipeStepCards` will need to handle both regular recipe steps and a special ingredients card.
+*   **State Management**: Managing the state of checkboxes for ingredients and the current step for the stepper.
+*   **Navigation**: Ensuring seamless navigation between the recipe detail page and the new steps page.
+*   **UI/UX**: Designing an intuitive and clean UI for the bottom app bar, stepper, and ingredients card.
+*   **TypeScript Errors**: Resolving existing linter errors in `RecipeStepCards.tsx`.
 
 ## High-Level Task Breakdown (Phased Approach)
 
@@ -152,6 +160,21 @@ The user aims to develop a Next.js-based Progressive Web App (PWA) called "Recip
     *   [ ] Saved/favorite recipes.
     *   **Success Criterion:** Enhanced personalization.
 
+**Phase 4: Bottom App Bar and Navigation**
+1.  Create `BottomAppBar.tsx` component in `src/app/(app)/recipe/[id]/_components/`.
+2.  Integrate `BottomAppBar` into `RecipeDetailClient.tsx`.
+3.  Create a new recipe steps page: `src/app/(app)/recipe/[id]/steps/page.tsx`.
+4.  Implement navigation from `BottomAppBar` CTA to the new steps page.
+
+**Phase 5: Enhance RecipeStepCards Component**
+1.  Add a stepper UI to the top of `RecipeStepCards.tsx`.
+2.  Prepend a special "Ingredients" card with checkboxes to `RecipeStepCards`.
+3.  Adjust card swiping/navigation logic in `RecipeStepCards.tsx` to accommodate the ingredients card.
+
+**Phase 6: Refinements and Error Handling**
+1.  Fix linter errors in `RecipeStepCards.tsx`.
+2.  Thoroughly test all new features and user flows.
+
 ## Project Status Board
 
 - [x] Setup PWA basics and Shadcn UI.
@@ -172,6 +195,18 @@ The user aims to develop a Next.js-based Progressive Web App (PWA) called "Recip
 - [x] Corrected navigation links across recipe list, recipe detail, and bottom navigation bar to ensure consistency with route changes (e.g., `/dashboard` to `/recipes`, `/recipes/[id]` to `/recipe/[id]`).
 - [ ] Task: Full Supabase Auth integration (protected routes, session management).
 - [ ] Task: Backend for grocery image upload and vision API call.
+- [ ] **Phase 1: Bottom App Bar and Navigation**
+    *   [ ] Create `BottomAppBar.tsx`
+    *   [ ] Integrate `BottomAppBar` into `RecipeDetailClient.tsx`
+    *   [ ] Create recipe steps page (`.../steps/page.tsx`)
+    *   [ ] Implement navigation from CTA to steps page
+- [ ] **Phase 2: Enhance RecipeStepCards Component**
+    *   [ ] Add stepper to `RecipeStepCards.tsx`
+    *   [ ] Add Ingredients card with checkboxes to `RecipeStepCards.tsx`
+    *   [ ] Adjust card logic in `RecipeStepCards.tsx`
+- [ ] **Phase 3: Refinements and Error Handling**
+    *   [ ] Fix linter errors in `RecipeStepCards.tsx`
+    *   [ ] Test new features
 
 ## Executor Feedback or Help Requests
 

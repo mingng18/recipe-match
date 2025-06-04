@@ -1,18 +1,46 @@
-// import FavouriteIcon from "./_components/FavouriteIcon"; // No longer directly used here
-// import SearchInput from "./_components/Search"; // No longer directly used here
-// import RecipeCard from "./_components/RecipeCard"; // No longer directly used here
-import RecipeGridClient from "./_components/RecipeGridClient"; // Import the new client component
+import RecipeGridClient from "./_components/RecipeGridClient";
+import RecipeOfTheDay from "./_components/RecipeOfTheDay";
+import SearchBar from "./_components/SearchBar";
+import CategoryTabs from "./_components/CategoryTabs";
 import { dummyRecipesData } from "@/lib/dummy-recipes";
+import { Category } from "@/lib/constants";
 
-export default function RecipesPage() { // Renamed from DashboardPage for clarity
-  // This page is now a Server Component. 
-  // It fetches or imports data and passes it to Client Components.
-  const recipes = dummyRecipesData; // In a real app, this might be an async fetch
+export default async function RecipesPage(props: {
+  searchParams: Promise<{
+    search: string;
+    category: string;
+  }>;
+}) {
+  const { search, category } = await props.searchParams;
+  const recipes = dummyRecipesData;
+
+  const currentSearch = search || "";
+  const currentCategory = category || Category.ALL;
+
+  // Filter recipes based on category and search
+  // const filteredRecipes = recipes.filter((recipe) => {
+  //   const matchesCategory =
+  //     currentCategory === Category.ALL ||
+  //     recipe.tags?.includes(currentCategory);
+  //   const matchesSearch =
+  //     !search ||
+  //     [recipe.title, recipe.description, ...(recipe.tags || [])].some((text) =>
+  //       text.toLowerCase().includes(currentSearch.toLowerCase()),
+  //     );
+
+  //   return matchesCategory && matchesSearch;
+  // });
 
   return (
-    <div className="container mx-auto p-0 md:p-0"> {/* Adjusted padding, client comp will handle its own as needed */}
-      <RecipeGridClient allRecipes={recipes} />
-      {/* The TODO for other sections can be managed within RecipeGridClient or here if they are server-rendered sections */}
+    <div className="container mx-auto p-0 md:p-0">
+      <div className="space-y-6">
+        <div className="bg-background/95 sticky top-0 z-20 pt-4 backdrop-blur-lg md:px-0">
+          <SearchBar />
+          <CategoryTabs />
+        </div>
+        <RecipeOfTheDay recipe={recipes[0]!} />
+        <RecipeGridClient filteredRecipes={recipes.slice(1)} />
+      </div>
     </div>
   );
 }

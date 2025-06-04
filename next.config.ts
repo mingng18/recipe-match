@@ -17,6 +17,14 @@ const withPWA = withPWAInit({
 const config: NextConfig = {
   output: "standalone",
   // Add other Next.js config options here if needed
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
 };
 
 export default withPWA(config as any);

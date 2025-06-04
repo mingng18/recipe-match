@@ -116,7 +116,7 @@ export default function RecipeStepCards({ steps, onComplete }: RecipeStepCardsPr
         {props.map(({ x, y, rot, scale }, i) => (
           <animated.div 
             className="absolute w-full h-full touch-none"  // touch-none for useDrag
-            key={steps[i].stepNumber} 
+            key={steps[i]?.stepNumber} 
             style={{ x, y }} 
             {...bind(i)} // Bind gesture to the card index (original index)
           >
@@ -127,18 +127,18 @@ export default function RecipeStepCards({ steps, onComplete }: RecipeStepCardsPr
               className="w-full h-full p-1"
             >
               <Card className="w-full h-full flex flex-col shadow-xl bg-card text-card-foreground rounded-xl overflow-hidden">
-                {steps[i].imageUrl && (
+                {steps[i]?.imageUrl && (
                   <div className="relative w-full h-1/3 md:h-2/5 bg-muted">
                     {/* Placeholder for step image - replace with actual Image component if needed */}
-                    <img src={steps[i].imageUrl} alt={`Step ${steps[i].stepNumber}`} className="w-full h-full object-cover" />
+                    <img src={steps[i]?.imageUrl} alt={`Step ${steps[i]?.stepNumber}`} className="w-full h-full object-cover" />
                   </div>
                 )}
-                <CardHeader className={`pb-2 ${steps[i].imageUrl ? 'pt-3' : 'pt-6'}`}> {/* Adjust padding based on image */}
-                  <CardTitle className="text-lg md:text-xl">Step {steps[i].stepNumber}</CardTitle>
+                <CardHeader className={`pb-2 ${steps[i]?.imageUrl ? 'pt-3' : 'pt-6'}`}> {/* Adjust padding based on image */}
+                  <CardTitle className="text-lg md:text-xl">Step {steps[i]?.stepNumber}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow overflow-y-auto p-4 pt-0">
                   <CardDescription className="text-sm md:text-base whitespace-pre-line">
-                    {steps[i].description}
+                    {steps[i]?.description}
                   </CardDescription>
                 </CardContent>
               </Card>

@@ -3,6 +3,7 @@ import { getRecipeById, type Recipe } from '@/lib/dummy-recipes'; // Keep type R
 import RecipeDetailClient from './_components/RecipeDetailClient'; // Import the new Client Component
 import { Button } from '@/components/ui/button'; // For the not found case
 import Link from 'next/link'; // For the not found case
+import BottomAppBar from './_components/BottomAppBar';
 
 // Optional: Define metadata for the page (Server Component feature)
 // export async function generateMetadata({ params }: { params: { id: string } }) {
@@ -28,5 +29,10 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
   }
 
   // The Server Component now just passes data to the Client Component
-  return <RecipeDetailClient recipe={recipe} />;
-} 
+  return (
+    <>
+      <RecipeDetailClient recipe={recipe} />
+      <BottomAppBar />
+    </>
+  );
+}
