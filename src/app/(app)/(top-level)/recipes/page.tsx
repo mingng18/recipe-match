@@ -4,6 +4,7 @@ import SearchBar from "./_components/SearchBar";
 import CategoryTabs from "./_components/CategoryTabs";
 import { dummyRecipesData } from "@/lib/dummy-recipes";
 import { Category } from "@/lib/constants";
+import RandomRecipeFab from "./_components/RandomRecipeFab";
 
 export default async function RecipesPage(props: {
   searchParams: Promise<{
@@ -41,6 +42,7 @@ export default async function RecipesPage(props: {
         <RecipeOfTheDay recipe={recipes[0]!} />
         <RecipeGridClient filteredRecipes={recipes.slice(1)} />
       </div>
+      <RandomRecipeFab />
     </div>
   );
 }
