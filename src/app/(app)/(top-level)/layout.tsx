@@ -12,7 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex justify-between items-center">
-        <Link href="/recipes" passHref>
+        <Link href="/plate-of-the-day" passHref>
           <Button variant="outline">Plate of the day</Button>
         </Link>
         <Link href="/capture" passHref>
