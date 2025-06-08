@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import FridgeImg from "@/images/fridge.png";
 import type { PantryItem } from "./dummy-data";
-import { motion, useDragControls, useMotionValue } from "motion/react";
+import { motion, useDragControls, useMotionValue } from "framer-motion";
 import { usePinch } from "@use-gesture/react";
 
 interface PositionedPantryItem extends PantryItem {
@@ -39,9 +40,6 @@ export default function FridgeWrapper({ data }: { data: PantryItem[] }) {
     };
 
     const positionedItems = data.map((pItem) => {
-      // Use saved position if available (e.g., (pItem as any).x), otherwise randomize
-      // Ensure random positions are within the calculated container bounds
-
       const containerInit =
         containerSize.width > OBJECT_WIDTH &&
         containerSize.height > OBJECT_HEIGHT;
@@ -94,7 +92,7 @@ export default function FridgeWrapper({ data }: { data: PantryItem[] }) {
           alt="fridge"
           width={1000}
           height={1000}
-          className="mx-auto my-auto object-contain p-4" // Changed to object-contain for better scaling visibility
+          className="mx-auto my-auto object-contain p-4"
           style={{
             alignSelf: "center",
             justifySelf: "center",
@@ -106,12 +104,11 @@ export default function FridgeWrapper({ data }: { data: PantryItem[] }) {
 
         {items.map((item) => (
           <FridgeItem
-            key={item.id}
+            key={item.id} // Key is here on the component instance
             item={item}
             initialX={item.x}
             initialY={item.y}
             dragConstraints={fridgeAreaRef}
-            // onPositionChange={handlePositionChange}
           />
         ))}
       </motion.div>
@@ -124,21 +121,17 @@ const FridgeItem = ({
   initialX,
   initialY,
   dragConstraints,
-  //   onPositionChange,
 }: {
   item: PositionedPantryItem;
   initialX: number;
   initialY: number;
   dragConstraints: React.RefObject<HTMLDivElement | null>;
-  //   onPositionChange: (id: string, x: number, y: number) => void;
 }) => {
   const controls = useDragControls();
-  // Parse the leading integer from the quantity string, default to 1.
-  //   const numItems = Math.max(1, parseInt(item.quantity, 10) || 1);
   const itemScale = useMotionValue(1);
   const itemRef = useRef<HTMLDivElement>(null);
 
-  const bind = usePinch(
+  const bind = usePinch( // usePinch is from @use-gesture/react
     ({ offset: [s] }) => {
       itemScale.set(s);
     },
@@ -150,41 +143,44 @@ const FridgeItem = ({
   );
 
   return (
-    <motion.div
-      ref={itemRef}
-      key={item.id}
-      drag
-      dragControls={controls}
-      dragConstraints={dragConstraints}
-      className="absolute cursor-grab active:cursor-grabbing"
-      initial={{
-        scale: 0,
-        opacity: 0,
-      }}
-      animate={{
-        scale: 1,
-        opacity: 1,
-      }}
-      transition={{
-        duration: 0.5,
-        type: "spring",
-        damping: 10,
-      }}
-      style={{
-        top: initialY,
-        left: initialX,
-        zIndex: 10,
-        scale: itemScale,
-      }}
-    >
-      <Image
-        src={item.imageUrl}
-        alt={item.name}
-        width={OBJECT_WIDTH}
-        height={OBJECT_HEIGHT}
-        className="pointer-events-none"
-        priority
-      />
-    </motion.div>
+    <Link href={`/ingredient/${item.id}`} passHref legacyBehavior>
+      <motion.div
+        ref={itemRef}
+        drag
+        dragControls={controls}
+        dragConstraints={dragConstraints}
+        className="absolute cursor-grab active:cursor-grabbing"
+        initial={{
+          scale: 0,
+          opacity: 0,
+        }}
+        animate={{
+          scale: 1,
+          opacity: 1,
+        }}
+        transition={{
+          duration: 0.5,
+          type: "spring",
+          damping: 10,
+        }}
+        style={{
+          top: initialY,
+          left: initialX,
+          zIndex: 10,
+          scale: itemScale,
+        }}
+      >
+        <Image
+          id={`ingredient-image-${item.id}`} // Unique ID for the image
+          src={item.imageUrl}
+          alt={item.name}
+          width={OBJECT_WIDTH}
+          height={OBJECT_HEIGHT}
+          className="pointer-events-none" // To ensure drag works on the parent motion.div
+          priority
+          style={{ viewTransitionName: `ingredient-image-${item.id}` }} // Added viewTransitionName
+        />
+      </motion.div>
+    </Link>
   );
 };
