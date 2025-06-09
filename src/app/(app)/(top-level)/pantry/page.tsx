@@ -31,11 +31,11 @@ const REFRESH_THRESHOLD = 80; // How far user needs to pull down
 const INDICATOR_AREA_HEIGHT = 60; // Height of the area where indicator is shown
 
 export default function PantryPage() {
+  const router = useRouter(); // Correctly initialize router
+  const x = useMotionValue(0); // Correctly initialize x for horizontal drag
   const [items, setItems] = useState<PantryItem[]>(() => sortPantryItems(dummyPantryItems));
   const [isRefreshing, setIsRefreshing] = useState(false);
   const y = useMotionValue(0); // Motion value for the Y position of the draggable content
-  // const router = useRouter(); // Already added in the previous step's thought process, just ensuring it's here
-  // const x = useMotionValue(0); // Already added in the previous step's thought process
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
@@ -141,5 +141,4 @@ export default function PantryPage() {
     </motion.div>
   );
 }
-// Need to import useRouter
-import { useRouter } from "next/navigation";
+// Removed duplicated import from here

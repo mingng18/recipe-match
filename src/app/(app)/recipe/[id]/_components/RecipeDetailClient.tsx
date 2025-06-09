@@ -41,6 +41,7 @@ export default function RecipeDetailClient({
             layout="fill"
             objectFit="cover"
             className="brightness-90"
+            style={{ viewTransitionName: `recipe-image-${recipe.id}` }}
           />
         )}
         <div className="absolute top-0 right-0 left-0 z-10 flex items-center justify-between p-4">
