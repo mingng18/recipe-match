@@ -4,25 +4,20 @@ import MilkImg from "@/images/milk.png";
 import OnionImg from "@/images/onion.png";
 import TomatoesImg from "@/images/tomato.png";
 import PotatoImg from "@/images/potato.png";
-import type { StaticImageData } from "next/image";
 
-// Dummy data for pantry items - replace with API data later
+import FlourImg from "@/images/cabinet/flour.png";
+import PastaImg from "@/images/cabinet/pasta.png";
+import RiceImg from "@/images/cabinet/rice.png";
+import SugarImg from "@/images/cabinet/sugar.png";
+import type { PantryItem } from "@/app/type/pantry-item";
+
 const today = new Date();
 const getDummyDate = (daysOffset: number) =>
   new Date(today.getTime() + daysOffset * 24 * 60 * 60 * 1000)
     .toISOString()
     .split("T")[0];
 
-export type PantryItem = {
-  id: number;
-  name: string;
-  quantity: string;
-  expiryDate?: string;
-  category: string;
-  imageUrl: StaticImageData;
-};
-
-export const dummyPantryItems: PantryItem[] = [
+export const dummyFridgeItems: PantryItem[] = [
   {
     id: 1,
     name: "Tomatoes",
@@ -30,6 +25,8 @@ export const dummyPantryItems: PantryItem[] = [
     expiryDate: getDummyDate(3),
     category: "Vegetables",
     imageUrl: TomatoesImg,
+    x: 0,
+    y: 0,
   },
   {
     id: 2,
@@ -38,7 +35,9 @@ export const dummyPantryItems: PantryItem[] = [
     expiryDate: getDummyDate(1),
     category: "Meat",
     imageUrl: ChickenImg,
-  }, // lbs to g
+    x: 0,
+    y: 0,
+  },
   {
     id: 3,
     name: "Pasta",
@@ -46,7 +45,9 @@ export const dummyPantryItems: PantryItem[] = [
     expiryDate: getDummyDate(365),
     category: "Grains",
     imageUrl: PotatoImg,
-  }, // box to g
+    x: 0,
+    y: 0,
+  },
   {
     id: 4,
     name: "Potato",
@@ -54,7 +55,9 @@ export const dummyPantryItems: PantryItem[] = [
     expiryDate: getDummyDate(365),
     category: "Vegetables",
     imageUrl: PotatoImg,
-  }, // removed "bottle"
+    x: 0,
+    y: 0,
+  },
   {
     id: 5,
     name: "Onions",
@@ -62,6 +65,8 @@ export const dummyPantryItems: PantryItem[] = [
     expiryDate: getDummyDate(10),
     category: "Vegetables",
     imageUrl: OnionImg,
+    x: 0,
+    y: 0,
   },
   {
     id: 6,
@@ -70,7 +75,9 @@ export const dummyPantryItems: PantryItem[] = [
     expiryDate: getDummyDate(30),
     category: "Vegetables",
     imageUrl: GarlicImg,
-  }, // head to unit
+    x: 0,
+    y: 0,
+  },
   {
     id: 7,
     name: "Milk",
@@ -78,5 +85,50 @@ export const dummyPantryItems: PantryItem[] = [
     expiryDate: getDummyDate(-2),
     category: "Dairy",
     imageUrl: MilkImg,
-  }, // Gallon to L
+    x: 0,
+    y: 0,
+  },
+];
+
+export const dummyCabinetItems: PantryItem[] = [
+  {
+    id: 7,
+    name: "Flour",
+    quantity: "1 kg",
+    expiryDate: getDummyDate(-2),
+    category: "Baking",
+    imageUrl: FlourImg,
+    x: 0,
+    y: 0,
+  },
+  {
+    id: 8,
+    name: "Sugar",
+    quantity: "500g",
+    expiryDate: getDummyDate(-2),
+    category: "Baking",
+    imageUrl: SugarImg,
+    x: 0,
+    y: 0,
+  },
+  {
+    id: 9,
+    name: "Pasta",
+    quantity: "1 box",
+    expiryDate: getDummyDate(-2),
+    category: "Baking",
+    imageUrl: PastaImg,
+    x: 0,
+    y: 0,
+  },
+  {
+    id: 10,
+    name: "Rice",
+    quantity: "2 lbs",
+    expiryDate: getDummyDate(-2),
+    category: "Baking",
+    imageUrl: RiceImg,
+    x: 0,
+    y: 0,
+  },
 ];

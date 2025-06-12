@@ -15,8 +15,10 @@ const withPWA = withPWAInit({
 
 /** @type {import("next").NextConfig} */
 const config: NextConfig = {
+  experimental: {
+    viewTransition: true,
+  },
   output: "standalone",
-  // Add other Next.js config options here if needed
   images: {
     remotePatterns: [
       {
