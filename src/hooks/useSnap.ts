@@ -1,7 +1,7 @@
 import type {
   BoundingBox,
   MotionProps,
-  DragHandlers,
+  DragHandler,
   SpringOptions,
   DragElastic,
   PanInfo,
@@ -14,7 +14,7 @@ export type Point = {
   y?: number;
 };
 
-const POWER = 0.10;
+const POWER = 0.1;
 
 export type SnapPointsType =
   | { type: "absolute"; points: Point[] }
@@ -42,16 +42,18 @@ export type SnapOptions = {
   onMeasureDragConstraints?: MotionProps["onMeasureDragConstraints"];
 };
 
+export type DragProps = Pick<
+  MotionProps,
+  | "drag"
+  | "onDragStart"
+  | "onDragEnd"
+  | "onMeasureDragConstraints"
+  | "dragMomentum"
+> &
+  Partial<Pick<MotionProps, "dragConstraints">>;
+
 export type UseSnapResult = {
-  dragProps: Pick<
-    MotionProps,
-    | "drag"
-    | "onDragStart"
-    | "onDragEnd"
-    | "onMeasureDragConstraints"
-    | "dragMomentum"
-  > &
-    Partial<Pick<MotionProps, "dragConstraints">>;
+  dragProps: DragProps;
   snapTo: (index: number) => void;
   currentSnappointIndex: number | null;
 };
@@ -195,7 +197,7 @@ export const useSnap = ({
     [ref, constraints, resolveConstraints, direction],
   );
 
-  const onDragEndHandler: DragHandlers["onDragEnd"] = useCallback(
+  const onDragEndHandler: DragHandler = useCallback(
     (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       onDragEnd?.(event, info);
 

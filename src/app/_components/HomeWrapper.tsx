@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import Image from "next/image";
 import Cabinet from "@/images/cabinet.png";
 import Fridge from "@/images/fridge.png";
@@ -34,6 +34,12 @@ const SpringAnimation = {
   damping: 20,
 } as const;
 
+const points: { x?: number; y?: number }[] = [
+  { y: 0.32 },
+  { y: 0.46 },
+  { y: 0.6 },
+];
+
 export default function HomeWrapper({
   data,
   type,
@@ -44,6 +50,14 @@ export default function HomeWrapper({
   const router = useRouter();
   const fridgeAreaRef = useRef<HTMLDivElement>(null);
   const [items, setItems] = useState<PantryItem[]>([]);
+
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    setWidth(fridgeAreaRef.current?.getBoundingClientRect().width ?? 0);
+    setHeight(fridgeAreaRef.current?.getBoundingClientRect().height ?? 0);
+  }, []);
 
   const x = useMotionValue(0); // Correctly initialize x for horizontal drag
 
@@ -164,6 +178,21 @@ export default function HomeWrapper({
             initialX={item.x}
             initialY={item.y}
             dragConstraints={fridgeAreaRef}
+            points={points}
+          />
+        ))}
+        {points.map((p, index) => (
+          <div
+            key={index} // Array is static so it's fine to use index as key
+            className="absolute h-2 w-2 rounded-full bg-red-500"
+            style={{
+              top: p.y === undefined ? "0" : (height - OBJECT_HEIGHT) * p.y,
+              bottom: p.y === undefined ? "0" : undefined,
+              left: p.x === undefined ? "0" : (width - OBJECT_WIDTH) * p.x,
+              right: p.x === undefined ? "0" : undefined,
+              width: p.x === undefined ? undefined : p.y === undefined ? 4 : 8,
+              height: p.y === undefined ? undefined : p.x === undefined ? 4 : 8,
+            }}
           />
         ))}
       </motion.div>
