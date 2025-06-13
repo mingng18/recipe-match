@@ -5,6 +5,7 @@ import type {
   SpringOptions,
   DragElastic,
   PanInfo,
+  AnimationPlaybackControlsWithThen,
 } from "framer-motion";
 import { animate } from "framer-motion";
 import { type RefObject, useRef, useState, useCallback, useMemo } from "react";
@@ -40,6 +41,7 @@ export type SnapOptions = {
   onDragStart?: MotionProps["onDragStart"];
   onDragEnd?: MotionProps["onDragEnd"];
   onMeasureDragConstraints?: MotionProps["onMeasureDragConstraints"];
+  onSnapComplete?: (x?: number, y?: number) => void;
 };
 
 export type DragProps = Pick<
@@ -66,6 +68,7 @@ export const useSnap = ({
   snapPoints,
   ref,
   springOptions = {},
+  onSnapComplete,
   constraints,
   dragElastic = 0.5,
   onDragStart,
@@ -99,11 +102,15 @@ export const useSnap = ({
     const baseX = window.scrollX + elementBox.x - transformMatrix.e;
     const baseY = window.scrollY + elementBox.y - transformMatrix.f;
 
-    const left = box.left !== undefined ? baseX + box.left : undefined;
-    const top = box.top !== undefined ? baseY + box.top : undefined;
+    // For center-based positioning, adjust constraints by half element size
+    const elementWidth = elementBox.width;
+    const elementHeight = elementBox.height;
+    
+    const left = box.left !== undefined ? baseX + box.left + elementWidth / 2 : undefined;
+    const top = box.top !== undefined ? baseY + box.top + elementHeight / 2 : undefined;
 
-    const right = box.right !== undefined ? baseX + box.right : undefined;
-    const bottom = box.bottom !== undefined ? baseY + box.bottom : undefined;
+    const right = box.right !== undefined ? baseX + box.right - elementWidth / 2 : undefined;
+    const bottom = box.bottom !== undefined ? baseY + box.bottom - elementHeight / 2 : undefined;
 
     const width =
       left !== undefined && right !== undefined ? right - left : undefined;
@@ -118,7 +125,7 @@ export const useSnap = ({
       right,
       bottom,
     };
-  }, [constraints, ref]); // constraintsBoxRef.current is a ref, so its reference doesn't change
+  }, [constraints, ref]);
 
   const convertSnappoints = useCallback(
     (snapPointsToConvert: SnapPointsType) => {
@@ -222,8 +229,8 @@ export const useSnap = ({
       };
 
       const dropCoordinates = {
-        x: window.scrollX + elementBox.x,
-        y: window.scrollY + elementBox.y,
+        x: window.scrollX + elementBox.x + elementBox.width / 2,
+        y: window.scrollY + elementBox.y + elementBox.height / 2,
       };
 
       const afterInertia = {
@@ -353,6 +360,7 @@ export const useSnap = ({
           },
         );
       }
+
       if (direction === "y" || direction === "both") {
         animate(
           ref.current,
@@ -362,7 +370,14 @@ export const useSnap = ({
             type: "spring",
             velocity: velocity.y,
           },
-        );
+        ).then(() => {
+          // Call onSnapComplete with the absolute coordinates
+          if (onSnapComplete) {
+            const finalX = selectedPoint?.x ?? afterInertiaClamped.x;
+            const finalY = selectedPoint?.y ?? afterInertiaClamped.y;
+            onSnapComplete(finalX, finalY);
+          }
+        });
       }
     },
     [
@@ -372,9 +387,9 @@ export const useSnap = ({
       snapPoints,
       resolveConstraints,
       direction,
-      springOptions,
       dragElastic,
-      setCurrentSnappointIndex, // Added setCurrentSnappointIndex as a dependency
+      springOptions,
+      onSnapComplete,
     ],
   );
 
@@ -396,34 +411,41 @@ export const useSnap = ({
       };
 
       setCurrentSnappointIndex(index);
+      const animations: AnimationPlaybackControlsWithThen[] = [];
       if (convertedPoint.x !== undefined) {
-        animate(
-          ref.current,
-          { x: convertedPoint.x - base.x },
-          {
-            ...springOptions,
-            type: "spring",
-          },
+        animations.push(
+          animate(
+            ref.current,
+            { x: convertedPoint.x - base.x },
+            {
+              ...springOptions,
+              type: "spring",
+            },
+          ),
         );
       }
       if (convertedPoint.y !== undefined) {
-        animate(
-          ref.current,
-          { y: convertedPoint.y - base.y },
-          {
-            ...springOptions,
-            type: "spring",
-          },
+        animations.push(
+          animate(
+            ref.current,
+            { y: convertedPoint.y - base.y },
+            {
+              ...springOptions,
+              type: "spring",
+            },
+          ),
         );
       }
+
+      // Wait for all animations to complete before calling onSnapComplete
+      Promise.all(animations).then(() => {
+        if (onSnapComplete) {
+          // Pass absolute coordinates directly
+          onSnapComplete(convertedPoint.x, convertedPoint.y);
+        }
+      });
     },
-    [
-      convertSnappoints,
-      snapPoints,
-      ref,
-      springOptions,
-      setCurrentSnappointIndex,
-    ],
+    [convertSnappoints, snapPoints, ref, springOptions, onSnapComplete],
   );
 
   const dragProps: Partial<MotionProps> = useMemo(

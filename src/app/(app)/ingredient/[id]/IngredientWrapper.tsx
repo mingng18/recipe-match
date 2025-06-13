@@ -5,21 +5,19 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button"; // Added Button
 import { Plus, Minus, ChevronRightIcon, ChevronLeftIcon } from "lucide-react"; // Added Icons
 import { ShoppingBasket, Archive, BookOpen } from "lucide-react"; // Added BookOpen icon
-import type { PantryItem } from "@/app/type/pantry-item";
+import type { PantryItem } from "@/type/PantryItem";
 import { unstable_ViewTransition as ViewTransition } from "react";
+import usePantryItems from "@/data/UsePantry";
+import { notFound } from "next/navigation";
 
-export default function IngredientWrapper({
-  ingredient,
-  currentQuantity,
-  quantityUnit,
-  recipeCount,
-}: {
-  ingredient: PantryItem;
-  currentQuantity: number;
-  quantityUnit: string;
-  recipeCount: number;
-}) {
-  const [portions, setPortions] = useState(currentQuantity);
+export default function IngredientWrapper({ id }: { id: number }) {
+  const { pantryItems } = usePantryItems();
+
+  const ingredient = pantryItems.find((item) => item.id === id);
+
+  const quantity = parseQuantity(ingredient?.quantity ?? "");
+
+  const [portions, setPortions] = useState(quantity.number);
 
   const handleDecreaseQuantity = () => {
     setPortions((prev) => Math.max(0, prev - 1));
@@ -29,7 +27,7 @@ export default function IngredientWrapper({
     setPortions((prev) => prev + 1);
   };
 
-  const isPantryItem = "expiryDate" in ingredient;
+  if (!ingredient) notFound();
 
   return (
     <div className="container mx-auto max-w-lg p-4">
@@ -66,7 +64,7 @@ export default function IngredientWrapper({
           <Minus className="h-5 w-5" />
         </Button>
         <span className="text-xl font-medium text-gray-800 tabular-nums">
-          {currentQuantity} {quantityUnit}
+          {quantity.number} {quantity.unit}
         </span>
         <Button
           variant="outline"
@@ -89,7 +87,7 @@ export default function IngredientWrapper({
       <div className="mt-4 border-t pt-2 text-center">
         <p className="text-xs text-gray-500">
           ID: {ingredient.id} <br />
-          Type: {isPantryItem ? "Pantry Item" : "Cabinet Item"}
+          Type: {ingredient.type}
         </p>
       </div>
 
@@ -97,16 +95,33 @@ export default function IngredientWrapper({
       <div className="mt-6 border-t pt-4 text-center">
         <div className="flex items-center justify-center text-gray-700">
           <BookOpen size={20} className="text-primary mr-2" />
-          {recipeCount > 0 ? (
+          {/* {recipeCount > 0 ? (
             <p>
               Used in: <span className="font-semibold">{recipeCount}</span>
               recipe(s)
             </p>
           ) : (
             <p>Not currently used in your recipes.</p>
-          )}
+          )} */}
         </div>
       </div>
     </div>
   );
 }
+
+const parseQuantity = (
+  quantityStr: string,
+): { number: number; unit: string } => {
+  const match = quantityStr.match(/^(\d*\.?\d+)\s*(.*)$/);
+  if (match) {
+    return { number: parseFloat(match[1]!), unit: match[2]!.trim() };
+  }
+  // Fallback if no number found, or if it's just a description like "1 box"
+  // For "1 box", parseInt would be 1. parseFloat also 1.
+  // If quantityStr is "box", parseFloat will be NaN.
+  const num = parseFloat(quantityStr);
+  if (!isNaN(num)) {
+    return { number: num, unit: quantityStr.replace(String(num), "").trim() };
+  }
+  return { number: 1, unit: quantityStr }; // Default to 1 if parsing fails badly
+};

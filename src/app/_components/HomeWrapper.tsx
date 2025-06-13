@@ -4,11 +4,11 @@ import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import Image from "next/image";
 import Cabinet from "@/images/cabinet.png";
 import Fridge from "@/images/fridge.png";
-import IngredientItem from "./PantryItem";
+import IngredientItem from "./IngredientItem";
 
 import { animate, motion, useMotionValue, type PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
-import type { PantryItem } from "../type/pantry-item";
+import usePantryItems from "@/data/UsePantry";
 
 export const OBJECT_WIDTH = 64;
 export const OBJECT_HEIGHT = 64;
@@ -35,29 +35,24 @@ const SpringAnimation = {
 } as const;
 
 const points: { x?: number; y?: number }[] = [
-  { y: 0.32 },
-  { y: 0.46 },
-  { y: 0.6 },
+  { y: 220 },
+  { y: 440 },
+  { y: 660 },
 ];
 
-export default function HomeWrapper({
-  data,
-  type,
-}: {
-  data: PantryItem[];
-  type: "fridge" | "cabinet";
-}) {
+export default function HomeWrapper({ type }: { type: "fridge" | "cabinet" }) {
   const router = useRouter();
+  const { fridgeItems, cabinetItems } = usePantryItems();
+  const items = type === "fridge" ? fridgeItems : cabinetItems;
   const fridgeAreaRef = useRef<HTMLDivElement>(null);
-  const [items, setItems] = useState<PantryItem[]>([]);
 
-  const [width, setWidth] = useState(0);
-  const [height, setHeight] = useState(0);
+  // const [width, setWidth] = useState(0);
+  // const [height, setHeight] = useState(0);
 
-  useLayoutEffect(() => {
-    setWidth(fridgeAreaRef.current?.getBoundingClientRect().width ?? 0);
-    setHeight(fridgeAreaRef.current?.getBoundingClientRect().height ?? 0);
-  }, []);
+  // useLayoutEffect(() => {
+  //   setWidth(fridgeAreaRef.current?.getBoundingClientRect().width ?? 0);
+  //   setHeight(fridgeAreaRef.current?.getBoundingClientRect().height ?? 0);
+  // }, []);
 
   const x = useMotionValue(0); // Correctly initialize x for horizontal drag
 
@@ -94,51 +89,51 @@ export default function HomeWrapper({
     }
   };
 
-  useEffect(() => {
-    if (!fridgeAreaRef.current) return;
+  // useEffect(() => {
+  //   if (!fridgeAreaRef.current) return;
 
-    const containerSize = {
-      width: fridgeAreaRef.current.clientWidth,
-      height: fridgeAreaRef.current.clientHeight,
-    };
+  //   const containerSize = {
+  //     width: fridgeAreaRef.current.clientWidth,
+  //     height: fridgeAreaRef.current.clientHeight,
+  //   };
 
-    const positionedItems = data.map((pItem) => {
-      const containerInit =
-        containerSize.width > OBJECT_WIDTH &&
-        containerSize.height > OBJECT_HEIGHT;
+  //   const positionedItems = pantryItems.map((pItem) => {
+  //     const containerInit =
+  //       containerSize.width > OBJECT_WIDTH &&
+  //       containerSize.height > OBJECT_HEIGHT;
 
-      const initialX = containerInit
-        ? Math.random() * (containerSize.width - OBJECT_WIDTH)
-        : Math.random() * 50;
-      const initialY = containerInit
-        ? Math.random() * (containerSize.height - OBJECT_HEIGHT)
-        : Math.random() * 50;
+  //     const initialX = containerInit
+  //       ? Math.random() * (containerSize.width - OBJECT_WIDTH)
+  //       : Math.random() * 50;
+  //     const initialY = containerInit
+  //       ? Math.random() * (containerSize.height - OBJECT_HEIGHT)
+  //       : Math.random() * 50;
 
-      return {
-        ...pItem,
-        x: Math.max(
-          0,
-          Math.min(
-            initialX,
-            containerSize.width > OBJECT_WIDTH
-              ? containerSize.width - OBJECT_WIDTH
-              : 0,
-          ),
-        ),
-        y: Math.max(
-          0,
-          Math.min(
-            initialY,
-            containerSize.height > OBJECT_HEIGHT
-              ? containerSize.height - OBJECT_HEIGHT
-              : 0,
-          ),
-        ),
-      };
-    });
+  //     return {
+  //       ...pItem,
+  //       x: Math.max(
+  //         0,
+  //         Math.min(
+  //           initialX,
+  //           containerSize.width > OBJECT_WIDTH
+  //             ? containerSize.width - OBJECT_WIDTH
+  //             : 0,
+  //         ),
+  //       ),
+  //       y: Math.max(
+  //         0,
+  //         Math.min(
+  //           initialY,
+  //           containerSize.height > OBJECT_HEIGHT
+  //             ? containerSize.height - OBJECT_HEIGHT
+  //             : 0,
+  //         ),
+  //       ),
+  //     };
+  //   });
 
-    setItems(positionedItems);
-  }, [data]);
+  //   setItems(positionedItems);
+  // }, [data]);
 
   return (
     <motion.div
@@ -172,11 +167,9 @@ export default function HomeWrapper({
 
         {items.map((item) => (
           <IngredientItem
+            key={`${item.id}-${item.x}-${item.y}`}
             type={type}
-            key={item.id}
             item={item}
-            initialX={item.x}
-            initialY={item.y}
             dragConstraints={fridgeAreaRef}
             points={points}
           />
@@ -186,9 +179,9 @@ export default function HomeWrapper({
             key={index} // Array is static so it's fine to use index as key
             className="absolute h-2 w-2 rounded-full bg-red-500"
             style={{
-              top: p.y === undefined ? "0" : (height - OBJECT_HEIGHT) * p.y,
+              top: p.y === undefined ? "0" : p.y,
               bottom: p.y === undefined ? "0" : undefined,
-              left: p.x === undefined ? "0" : (width - OBJECT_WIDTH) * p.x,
+              left: p.x === undefined ? "0" : p.x,
               right: p.x === undefined ? "0" : undefined,
               width: p.x === undefined ? undefined : p.y === undefined ? 4 : 8,
               height: p.y === undefined ? undefined : p.x === undefined ? 4 : 8,

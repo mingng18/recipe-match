@@ -1,4 +1,4 @@
-import type { PantryItem } from "@/app/type/pantry-item";
+import type { PantryItem } from "@/type/PantryItem";
 
 export const getDaysUntilExpiry = (expiryDate?: string): number | null => {
   if (!expiryDate) return null;

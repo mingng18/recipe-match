@@ -6,7 +6,9 @@ export type PantryItem = {
   quantity: string;
   expiryDate?: string;
   category: string;
+  type: "fridge" | "cabinet";
   imageUrl: StaticImageData;
   x: number;
   y: number;
+  scale: number;
 };
