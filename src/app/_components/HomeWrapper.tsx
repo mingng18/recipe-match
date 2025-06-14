@@ -8,7 +8,8 @@ import IngredientItem from "./IngredientItem";
 
 import { animate, motion, useMotionValue, type PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
-import usePantryItems from "@/data/UsePantry";
+import usePantryStore from "@/store/pantry-store";
+import type { PantryItem } from "@/type/PantryItem";
 
 export const OBJECT_WIDTH = 64;
 export const OBJECT_HEIGHT = 64;
@@ -16,6 +17,12 @@ const SWIPE_THRESHOLD = 100;
 const VELOCITY_THRESHOLD = 50;
 const REFRESH_THRESHOLD = 80; // How far user needs to pull down
 const INDICATOR_AREA_HEIGHT = 60; // Height of the area where indicator is shown
+
+const SpringAnimation = {
+  type: "spring",
+  stiffness: 200,
+  damping: 20,
+} as const;
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -26,12 +33,6 @@ const containerVariants = {
       delayChildren: 0.1,
     },
   },
-};
-
-const SpringAnimation = {
-  type: "spring",
-  stiffness: 200,
-  damping: 20,
 } as const;
 
 const points: { x?: number; y?: number }[] = [
@@ -42,25 +43,58 @@ const points: { x?: number; y?: number }[] = [
 
 export default function HomeWrapper({ type }: { type: "fridge" | "cabinet" }) {
   const router = useRouter();
-  const { fridgeItems, cabinetItems } = usePantryItems();
+  const { fridgeItems, cabinetItems, initializeSync } = usePantryStore();
   const items = type === "fridge" ? fridgeItems : cabinetItems;
   const fridgeAreaRef = useRef<HTMLDivElement>(null);
 
-  // const [width, setWidth] = useState(0);
-  // const [height, setHeight] = useState(0);
+  // Initialize database sync on mount
+  useEffect(() => {
+    initializeSync();
+  }, [initializeSync]);
 
-  // useLayoutEffect(() => {
-  //   setWidth(fridgeAreaRef.current?.getBoundingClientRect().width ?? 0);
-  //   setHeight(fridgeAreaRef.current?.getBoundingClientRect().height ?? 0);
-  // }, []);
+  // Drag indicator state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragDirection, setDragDirection] = useState<"left" | "right" | null>(
+    null,
+  );
+  const [dragProgress, setDragProgress] = useState(0);
 
   const x = useMotionValue(0); // Correctly initialize x for horizontal drag
+
+  const handleHorizontalDragStart = () => {
+    setIsDragging(true);
+    setDragDirection(null);
+    setDragProgress(0);
+  };
+
+  const handleHorizontalDrag = (
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ) => {
+    const { offset } = info;
+    const absOffset = Math.abs(offset.x);
+
+    // Determine drag direction
+    if (Math.abs(offset.x) > 10) {
+      // Minimum threshold to determine direction
+      setDragDirection(offset.x < 0 ? "left" : "right");
+    }
+
+    // Calculate progress (0 to 1) based on how close to threshold
+    const progress = Math.min(absOffset / SWIPE_THRESHOLD, 1);
+    setDragProgress(progress);
+  };
 
   const handleHorizontalDragEnd = (
     event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo,
   ) => {
     const { offset, velocity } = info;
+
+    // Reset drag indicators
+    setIsDragging(false);
+    setDragDirection(null);
+    setDragProgress(0);
 
     switch (type) {
       case "fridge":
@@ -89,66 +123,114 @@ export default function HomeWrapper({ type }: { type: "fridge" | "cabinet" }) {
     }
   };
 
-  // useEffect(() => {
-  //   if (!fridgeAreaRef.current) return;
+  // Calculate indicator opacity and scale
+  const indicatorOpacity =
+    isDragging && dragDirection ? Math.min(dragProgress * 2, 1) : 0;
+  const indicatorScale = 0.5 + dragProgress * 0.5; // Scale from 0.5 to 1
 
-  //   const containerSize = {
-  //     width: fridgeAreaRef.current.clientWidth,
-  //     height: fridgeAreaRef.current.clientHeight,
-  //   };
+  // Calculate the squeezeness for the main image
+  // The more it squeeze, the X is longer while Y is shorter
+  const scaleX = 1 + dragProgress * 0.3; // Increased from 0.1 to 0.3 for more dramatic effect
+  const scaleY = 1 - dragProgress * 0.2; // Increased from 0.1 to 0.2 for more dramatic effect
 
-  //   const positionedItems = pantryItems.map((pItem) => {
-  //     const containerInit =
-  //       containerSize.width > OBJECT_WIDTH &&
-  //       containerSize.height > OBJECT_HEIGHT;
+  // Determine if the swipe direction is valid for current type
+  const isValidSwipeDirection = () => {
+    if (!dragDirection) return false;
+    if (type === "fridge" && dragDirection === "left") return true;
+    if (type === "cabinet" && dragDirection === "right") return true;
+    return false;
+  };
 
-  //     const initialX = containerInit
-  //       ? Math.random() * (containerSize.width - OBJECT_WIDTH)
-  //       : Math.random() * 50;
-  //     const initialY = containerInit
-  //       ? Math.random() * (containerSize.height - OBJECT_HEIGHT)
-  //       : Math.random() * 50;
-
-  //     return {
-  //       ...pItem,
-  //       x: Math.max(
-  //         0,
-  //         Math.min(
-  //           initialX,
-  //           containerSize.width > OBJECT_WIDTH
-  //             ? containerSize.width - OBJECT_WIDTH
-  //             : 0,
-  //         ),
-  //       ),
-  //       y: Math.max(
-  //         0,
-  //         Math.min(
-  //           initialY,
-  //           containerSize.height > OBJECT_HEIGHT
-  //             ? containerSize.height - OBJECT_HEIGHT
-  //             : 0,
-  //         ),
-  //       ),
-  //     };
-  //   });
-
-  //   setItems(positionedItems);
-  // }, [data]);
+  // Calculate resistance for invalid swipe directions
+  const getSwipeConstraints = () => {
+    if (type === "cabinet") {
+      // In cabinet, only allow right swipe, add resistance to left swipe
+      return { left: -30, right: 0 }; // Limit left swipe to -30px for resistance
+    } else {
+      // In fridge, only allow left swipe, add resistance to right swipe
+      return { left: 0, right: 30 }; // Limit right swipe to 30px for resistance
+    }
+  };
 
   return (
     <motion.div
       drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
+      dragConstraints={getSwipeConstraints()}
       style={{ x }}
+      onDragStart={handleHorizontalDragStart}
+      onDrag={handleHorizontalDrag}
       onDragEnd={handleHorizontalDragEnd}
-      className="relative h-dvh overflow-y-auto"
+      className="relative h-dvh"
     >
+      {/* Drag Indicators */}
+      {isDragging && dragDirection && (
+        <>
+          {/* Left Indicator - shows when swiping left */}
+          {dragDirection === "left" && (
+            <motion.div
+              className="absolute top-1/2 left-8 z-20 flex flex-col items-center"
+              style={{
+                opacity: isValidSwipeDirection()
+                  ? indicatorOpacity
+                  : indicatorOpacity * 0.3, // Dimmer for invalid direction
+                scale: indicatorScale,
+                transform: "translateY(-50%)",
+              }}
+            >
+              <div className="mb-2 text-4xl text-white drop-shadow-lg">
+                {getArrowDirection(dragDirection)}
+              </div>
+              <div
+                className={`rounded-full px-3 py-1 text-sm font-medium whitespace-nowrap text-white ${
+                  isValidSwipeDirection() ? "bg-green-500/70" : "bg-red-500/70"
+                }`}
+              >
+                {isValidSwipeDirection()
+                  ? getIndicatorText(dragDirection, type)
+                  : "Can't go this way"}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Right Indicator - shows when swiping right */}
+          {dragDirection === "right" && (
+            <motion.div
+              className="absolute top-1/2 right-8 z-20 flex flex-col items-center"
+              style={{
+                opacity: isValidSwipeDirection()
+                  ? indicatorOpacity
+                  : indicatorOpacity * 0.3, // Dimmer for invalid direction
+                scale: indicatorScale,
+                transform: "translateY(-50%)",
+              }}
+            >
+              <div className="mb-2 text-4xl text-white drop-shadow-lg">
+                {getArrowDirection(dragDirection)}
+              </div>
+              <div
+                className={`rounded-full px-3 py-1 text-sm font-medium whitespace-nowrap text-white ${
+                  isValidSwipeDirection() ? "bg-green-500/70" : "bg-red-500/70"
+                }`}
+              >
+                {isValidSwipeDirection()
+                  ? getIndicatorText(dragDirection, type)
+                  : "Can't go this way"}
+              </div>
+            </motion.div>
+          )}
+        </>
+      )}
+
       <motion.div
         ref={fridgeAreaRef}
         className="relative flex h-full w-full items-center justify-center overflow-hidden p-4"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
+        style={{
+          scaleX,
+          scaleY,
+        }}
       >
         <Image
           src={type === "cabinet" ? Cabinet : Fridge}
@@ -165,10 +247,9 @@ export default function HomeWrapper({ type }: { type: "fridge" | "cabinet" }) {
           priority
         />
 
-        {items.map((item) => (
+        {items?.map((item: PantryItem) => (
           <IngredientItem
             key={`${item.id}-${item.x}-${item.y}`}
-            type={type}
             item={item}
             dragConstraints={fridgeAreaRef}
             points={points}
@@ -192,3 +273,24 @@ export default function HomeWrapper({ type }: { type: "fridge" | "cabinet" }) {
     </motion.div>
   );
 }
+
+// Get indicator text based on type and direction
+const getIndicatorText = (
+  dragDirection: "left" | "right" | null,
+  type: "fridge" | "cabinet",
+) => {
+  if (!dragDirection) return "";
+
+  if (type === "fridge" && dragDirection === "left") {
+    return "Go to Cabinet";
+  } else if (type === "cabinet" && dragDirection === "right") {
+    return "Go to Fridge";
+  }
+  return "";
+};
+
+// Get arrow direction
+const getArrowDirection = (dragDirection: "left" | "right" | null) => {
+  if (!dragDirection) return "";
+  return dragDirection === "left" ? "←" : "→";
+};

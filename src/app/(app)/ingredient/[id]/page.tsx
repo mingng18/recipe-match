@@ -5,10 +5,8 @@ import IngredientWrapper from "./IngredientWrapper";
 
 export default async function IngredientPage(props: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ type?: "fridge" | "cabinet" }>;
 }) {
   const { id } = await props.params;
-  const { type } = await props.searchParams;
 
   const parsedId = parseInt(id, 10);
 
@@ -19,7 +17,7 @@ export default async function IngredientPage(props: {
 
   // if (!ingredient) notFound();
 
-  // 
+  //
 
   // const ingredientNameLower = ingredient.name.toLowerCase();
   // const count = dummyRecipesData.reduce((acc, recipe) => {

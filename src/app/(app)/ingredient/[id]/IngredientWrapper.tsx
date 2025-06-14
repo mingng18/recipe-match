@@ -1,20 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button"; // Added Button
 import { Plus, Minus, ChevronRightIcon, ChevronLeftIcon } from "lucide-react"; // Added Icons
 import { ShoppingBasket, Archive, BookOpen } from "lucide-react"; // Added BookOpen icon
 import type { PantryItem } from "@/type/PantryItem";
 import { unstable_ViewTransition as ViewTransition } from "react";
-import usePantryItems from "@/data/UsePantry";
-import { notFound } from "next/navigation";
+import usePantryStore from "@/store/pantry-store";
+import { notFound, useRouter } from "next/navigation";
 
 export default function IngredientWrapper({ id }: { id: number }) {
-  const { pantryItems } = usePantryItems();
+  const { pantryItems, initializeSync } = usePantryStore();
+  const router = useRouter();
 
-  const ingredient = pantryItems.find((item) => item.id === id);
+  // Initialize database sync on mount
+  useEffect(() => {
+    initializeSync();
+  }, [initializeSync]);
 
+  const ingredient = pantryItems?.find((item: PantryItem) => item.id === id);
   const quantity = parseQuantity(ingredient?.quantity ?? "");
 
   const [portions, setPortions] = useState(quantity.number);
@@ -27,29 +32,34 @@ export default function IngredientWrapper({ id }: { id: number }) {
     setPortions((prev) => prev + 1);
   };
 
-  if (!ingredient) notFound();
-
   return (
     <div className="container mx-auto max-w-lg p-4">
-      <Button variant="secondary" size="icon" className="size-8">
+      <Button
+        variant="secondary"
+        size="icon"
+        className="size-8"
+        onClick={() => router.back()}
+      >
         <ChevronLeftIcon />
       </Button>
 
       <h1 className="mb-4 text-center text-3xl font-bold text-gray-800">
-        {ingredient.name}
+        {ingredient?.name || "Loading..."}
       </h1>
 
-      <div className="mx-auto mb-6 w-full max-w-sm">
-        <ViewTransition name={`ingredient-image-${ingredient.id}`}>
-          <Image
-            id={`ingredient-image-${ingredient.id}`}
-            src={ingredient.imageUrl}
-            alt={ingredient.name}
-            width={400}
-            height={400}
-            className="h-full w-full object-cover"
-            priority
-          />
+      <div key={ingredient?.id || id} className="mx-auto mb-6 w-full max-w-sm">
+        <ViewTransition name={`ingredient-image-${id}`}>
+          {ingredient && (
+            <Image
+              id={`ingredient-image-${id}`}
+              src={ingredient.imageUrl}
+              alt={ingredient.name}
+              width={400}
+              height={400}
+              className="h-full w-full object-cover"
+              priority
+            />
+          )}
         </ViewTransition>
       </div>
 
@@ -60,6 +70,7 @@ export default function IngredientWrapper({ id }: { id: number }) {
           size="icon"
           onClick={handleDecreaseQuantity}
           aria-label="Decrease quantity"
+          disabled={!ingredient}
         >
           <Minus className="h-5 w-5" />
         </Button>
@@ -71,6 +82,7 @@ export default function IngredientWrapper({ id }: { id: number }) {
           size="icon"
           onClick={handleIncreaseQuantity}
           aria-label="Increase quantity"
+          disabled={!ingredient}
         >
           <Plus className="h-5 w-5" />
         </Button>
@@ -84,12 +96,14 @@ export default function IngredientWrapper({ id }: { id: number }) {
         </div> */}
 
       {/* Example of displaying type, can be expanded */}
-      <div className="mt-4 border-t pt-2 text-center">
-        <p className="text-xs text-gray-500">
-          ID: {ingredient.id} <br />
-          Type: {ingredient.type}
-        </p>
-      </div>
+      {ingredient && (
+        <div className="mt-4 border-t pt-2 text-center">
+          <p className="text-xs text-gray-500">
+            ID: {ingredient.id} <br />
+            Type: {ingredient.type}
+          </p>
+        </div>
+      )}
 
       {/* Recipe Usage Count */}
       <div className="mt-6 border-t pt-4 text-center">

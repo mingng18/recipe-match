@@ -12,20 +12,18 @@ import { useRouter } from "next/navigation";
 import { useSnap } from "@/hooks/useSnap";
 import { unstable_ViewTransition as ViewTransition } from "react";
 import Image from "next/image";
-import usePantryItems from "@/data/UsePantry";
+import usePantryStore from "@/store/pantry-store";
 
 const IngredientItem = ({
   item,
   dragConstraints,
-  type,
   points,
 }: {
   item: PantryItem;
   dragConstraints: React.RefObject<HTMLDivElement | null>;
-  type: "fridge" | "cabinet";
   points: { x?: number; y?: number }[];
 }) => {
-  const { updatePantryItem } = usePantryItems();
+  const { updatePantryItem } = usePantryStore();
 
   const router = useRouter();
   const controls = useDragControls();
@@ -100,7 +98,7 @@ const IngredientItem = ({
         zIndex: 10,
         scale: itemScale,
       }}
-      onClick={() => router.push(`/ingredient/${item.id}?type=${type}`)} // Navigate to the ingredient page on click
+      onClick={() => router.push(`/ingredient/${item.id}`)} // Navigate to the ingredient page on click
     >
       <ViewTransition name={`ingredient-image-${item.id}`}>
         <Image
