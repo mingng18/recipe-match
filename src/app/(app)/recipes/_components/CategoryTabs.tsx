@@ -12,7 +12,6 @@ const CATEGORY_FILTERS = [Category.ALL, Category.FAVORITES, Category.TRENDING];
 const NAV_ITEMS = [
   { name: "Recipes", path: "/recipes", iconName: "recipes" },
   { name: "Pantry", path: "/pantry", iconName: "pantry" },
-  { name: "Cabinet", path: "/cabinet", iconName: "cabinet" },
 ];
 
 const getCategoryIcon = (iconName: string) => { // Changed parameter to iconName for clarity
@@ -51,7 +50,7 @@ export default function CategoryTabs() {
 
   const handleFilterCategoryChange = (category: string) => {
     setActiveFilterCategory(category);
-    // Ensure navigation to /recipes if a filter is clicked (might be on /pantry or /cabinet)
+    // Ensure navigation to /recipes if a filter is clicked (might be on /pantry)
     const params = new URLSearchParams(); // Start fresh or use existing from searchParams if preferred
     if (category && category !== Category.ALL) {
       params.set("category", category);

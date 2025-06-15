@@ -7,9 +7,10 @@ import Fridge from "@/images/fridge.png";
 import IngredientItem from "./IngredientItem";
 
 import { animate, motion, useMotionValue, type PanInfo } from "framer-motion";
-import { useRouter } from "next/navigation";
 import usePantryStore from "@/store/pantry-store";
 import type { PantryItem } from "@/type/PantryItem";
+import { unstable_ViewTransition as ViewTransition } from "react";
+import { useTransitionRouter } from "next-view-transitions";
 
 export const OBJECT_WIDTH = 64;
 export const OBJECT_HEIGHT = 64;
@@ -42,7 +43,7 @@ const points: { x?: number; y?: number }[] = [
 ];
 
 export default function HomeWrapper({ type }: { type: "fridge" | "cabinet" }) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const { fridgeItems, cabinetItems, initializeSync } = usePantryStore();
   const items = type === "fridge" ? fridgeItems : cabinetItems;
   const fridgeAreaRef = useRef<HTMLDivElement>(null);
@@ -67,6 +68,46 @@ export default function HomeWrapper({ type }: { type: "fridge" | "cabinet" }) {
     setDragProgress(0);
   };
 
+  function slideInOut(type: "left" | "right") {
+    // Old Page
+    document.documentElement.animate(
+      [
+        { opacity: 1, transform: "translateX(0)" },
+        {
+          opacity: 1,
+          transform: `translateX(${type === "left" ? "-100%" : "100%"})`,
+        },
+      ],
+      {
+        duration: 500,
+        easing: "cubic-bezier(0,.4,.44,1.56)",
+        fill: "forwards",
+        pseudoElement: "::view-transition-old(root)",
+      },
+    );
+
+    // New Page
+    document.documentElement.animate(
+      [
+        {
+          opacity: 1,
+          transform: `translateX(${type === "left" ? "100%" : "-100%"})`,
+        },
+        { opacity: 1, transform: "translateX(0)" },
+      ],
+      // [
+      //   { clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0 100%)" },
+      //   { clipPath: "polygon(0 100%, 100% 100%, 100% 0%, 0 0%)" },
+      // ],
+      {
+        duration: 500,
+        easing: "cubic-bezier(0,.4,.44,1.56)",
+        fill: "forwards",
+        pseudoElement: "::view-transition-new(root)",
+      },
+    );
+  }
+
   const handleHorizontalDrag = (
     event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo,
@@ -89,6 +130,7 @@ export default function HomeWrapper({ type }: { type: "fridge" | "cabinet" }) {
     event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo,
   ) => {
+    event.preventDefault();
     const { offset, velocity } = info;
 
     // Reset drag indicators
@@ -102,7 +144,9 @@ export default function HomeWrapper({ type }: { type: "fridge" | "cabinet" }) {
           offset.x < -SWIPE_THRESHOLD &&
           Math.abs(velocity.x) > VELOCITY_THRESHOLD
         ) {
-          router.push("/cabinet");
+          router.push("/cabinet", {
+            onTransitionReady: () => slideInOut("left"),
+          });
         } else {
           // Snap back
           animate(x, 0, SpringAnimation);
@@ -114,7 +158,9 @@ export default function HomeWrapper({ type }: { type: "fridge" | "cabinet" }) {
           Math.abs(velocity.x) > VELOCITY_THRESHOLD
         ) {
           // Swipe Right to Pantry
-          router.push("/");
+          router.push("/fridge", {
+            onTransitionReady: () => slideInOut("right"),
+          });
         } else {
           // Snap back
           animate(x, 0, SpringAnimation);
@@ -145,10 +191,10 @@ export default function HomeWrapper({ type }: { type: "fridge" | "cabinet" }) {
   const getSwipeConstraints = () => {
     if (type === "cabinet") {
       // In cabinet, only allow right swipe, add resistance to left swipe
-      return { left: -30, right: 0 }; // Limit left swipe to -30px for resistance
+      return { left: -30, right: SWIPE_THRESHOLD + 50 }; // Allow right swipe for navigation
     } else {
       // In fridge, only allow left swipe, add resistance to right swipe
-      return { left: 0, right: 30 }; // Limit right swipe to 30px for resistance
+      return { left: -(SWIPE_THRESHOLD + 50), right: 30 }; // Allow left swipe for navigation
     }
   };
 
@@ -212,9 +258,8 @@ export default function HomeWrapper({ type }: { type: "fridge" | "cabinet" }) {
                   isValidSwipeDirection() ? "bg-green-500/70" : "bg-red-500/70"
                 }`}
               >
-                {isValidSwipeDirection()
-                  ? getIndicatorText(dragDirection, type)
-                  : "Can't go this way"}
+                {isValidSwipeDirection() &&
+                  getIndicatorText(dragDirection, type)}
               </div>
             </motion.div>
           )}

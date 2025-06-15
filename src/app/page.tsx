@@ -1,5 +1,5 @@
-import HomeWrapper from "./_components/HomeWrapper";
+import { permanentRedirect } from "next/navigation";
 
 export default async function Home() {
-  return <HomeWrapper type="fridge" />;
+  permanentRedirect("/pantry");
 }

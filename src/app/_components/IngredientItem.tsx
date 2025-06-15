@@ -105,8 +105,11 @@ const IngredientItem = ({
           id={`ingredient-image-${item.id}`} // Unique ID for the image
           src={item.imageUrl}
           alt={item.name}
-          width={OBJECT_WIDTH}
-          height={OBJECT_HEIGHT}
+          style={{
+            width: "auto",
+            height: `${OBJECT_HEIGHT}px`,
+            objectFit: "contain",
+          }} // Use CSS for sizing to avoid conflicts with transforms
           className="pointer-events-none" // To ensure drag works on the parent motion.div
           priority
         />

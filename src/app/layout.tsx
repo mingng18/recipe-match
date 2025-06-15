@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Nunito_Sans } from "next/font/google";
+import { ViewTransitions } from "next-view-transitions";
 
 export const metadata: Metadata = {
   title: "Recipe Matcher",
@@ -19,8 +20,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${nunitoSans.variable}`}>
-      <body>{children}</body>
-    </html>
+    <ViewTransitions>
+      <html lang="en" className={`${nunitoSans.variable}`}>
+        <body>{children}</body>
+      </html>
+    </ViewTransitions>
   );
 }
