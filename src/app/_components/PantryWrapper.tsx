@@ -9,7 +9,6 @@ import IngredientItem from "./IngredientItem";
 import { animate, motion, useMotionValue, type PanInfo } from "framer-motion";
 import usePantryStore from "@/store/pantry-store";
 import type { PantryItem } from "@/type/PantryItem";
-import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const OBJECT_WIDTH = 64;
 export const OBJECT_HEIGHT = 64;
@@ -90,6 +89,7 @@ export default function PantryWrapper() {
   const [dragProgress, setDragProgress] = useState(0);
   const [isBouncing, setIsBouncing] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
 
   const x = useMotionValue(0);
   const containerX = useMotionValue(
@@ -123,7 +123,10 @@ export default function PantryWrapper() {
   ) => {
     if (isTransitioning) return; // Don't allow dragging during transition
 
-    const { offset } = info;
+    const { offset, point } = info;
+    
+    // Update drag position for indicator
+    setDragPosition({ x: point.x, y: point.y });
     const absOffset = Math.abs(offset.x);
 
     // Determine drag direction
@@ -436,59 +439,31 @@ export default function PantryWrapper() {
     <div className="relative h-dvh overflow-hidden">
       {/* Drag Indicators */}
       {isDragging && dragDirection && (
-        <>
-          {/* Left Indicator - shows when swiping left */}
-          {dragDirection === "left" && (
-            <motion.div
-              className="absolute top-1/2 left-8 z-20 flex flex-col items-center"
-              style={{
-                opacity: isValidSwipeDirection()
-                  ? indicatorOpacity
-                  : indicatorOpacity * 0.3,
-                scale: indicatorScale,
-                transform: "translateY(-50%)",
-              }}
-            >
-              <div className="mb-2 text-4xl text-white drop-shadow-lg">
-                {getArrowDirection(dragDirection)}
-              </div>
-              <div
-                className={`rounded-full px-3 py-1 text-sm font-medium whitespace-nowrap text-white ${
-                  isValidSwipeDirection() ? "bg-green-500/70" : "bg-red-500/70"
-                }`}
-              >
-                {isValidSwipeDirection()
-                  ? getIndicatorText(dragDirection)
-                  : "Can't go this way"}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Right Indicator - shows when swiping right */}
-          {dragDirection === "right" && (
-            <motion.div
-              className="absolute top-1/2 right-8 z-20 flex flex-col items-center"
-              style={{
-                opacity: isValidSwipeDirection()
-                  ? indicatorOpacity
-                  : indicatorOpacity * 0.3,
-                scale: indicatorScale,
-                transform: "translateY(-50%)",
-              }}
-            >
-              <div className="mb-2 text-4xl text-white drop-shadow-lg">
-                {getArrowDirection(dragDirection)}
-              </div>
-              <div
-                className={`rounded-full px-3 py-1 text-sm font-medium whitespace-nowrap text-white ${
-                  isValidSwipeDirection() ? "bg-green-500/70" : "bg-red-500/70"
-                }`}
-              >
-                {isValidSwipeDirection() && getIndicatorText(dragDirection)}
-              </div>
-            </motion.div>
-          )}
-        </>
+        <motion.div
+          className="absolute z-20 flex flex-col items-center"
+          style={{
+            opacity: isValidSwipeDirection()
+              ? indicatorOpacity
+              : indicatorOpacity * 0.3,
+            scale: indicatorScale,
+            transform: "translate(-50%, -50%)",
+            left: dragPosition.x,
+            top: dragPosition.y - 100,
+          }}
+        >
+          <div className="mb-2 text-4xl text-white drop-shadow-lg">
+            {getArrowDirection(dragDirection)}
+          </div>
+          <div
+            className={`rounded-full px-3 py-1 text-sm font-medium whitespace-nowrap text-white ${
+              isValidSwipeDirection() ? "bg-green-500/70" : "bg-red-500/70"
+            }`}
+          >
+            {isValidSwipeDirection()
+              ? getIndicatorText(dragDirection)
+              : "Can't go this way"}
+          </div>
+        </motion.div>
       )}
 
       {/* View Title Indicator */}
@@ -503,7 +478,6 @@ export default function PantryWrapper() {
           style={{
             scaleX: tabIndicatorScaleX,
             x: tabIndicatorTranslateX,
-            // transformOrigin: tabIndicatorOrigin,
             animationDelay: "0.18s",
           }}
         >

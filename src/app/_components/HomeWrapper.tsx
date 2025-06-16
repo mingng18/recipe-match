@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Cabinet from "@/images/cabinet.png";
 import Fridge from "@/images/fridge.png";
@@ -9,7 +9,6 @@ import IngredientItem from "./IngredientItem";
 import { animate, motion, useMotionValue, type PanInfo } from "framer-motion";
 import usePantryStore from "@/store/pantry-store";
 import type { PantryItem } from "@/type/PantryItem";
-import { unstable_ViewTransition as ViewTransition } from "react";
 import { useTransitionRouter } from "next-view-transitions";
 
 export const OBJECT_WIDTH = 64;
