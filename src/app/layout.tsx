@@ -2,8 +2,7 @@ import "@/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Nunito_Sans } from "next/font/google";
-
-import { TRPCReactProvider } from "@/trpc/react";
+import { ViewTransitions } from "next-view-transitions";
 
 export const metadata: Metadata = {
   title: "Recipe Matcher",
@@ -21,10 +20,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${nunitoSans.variable}`}>
-      <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
-      </body>
-    </html>
+    <ViewTransitions>
+      <html lang="en" className={`${nunitoSans.variable}`}>
+        <body>{children}</body>
+      </html>
+    </ViewTransitions>
   );
 }
