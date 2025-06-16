@@ -6,7 +6,7 @@ import {
 } from "framer-motion";
 import { usePinch } from "@use-gesture/react";
 import { useCallback, useRef } from "react";
-import { OBJECT_WIDTH, OBJECT_HEIGHT } from "./HomeWrapper";
+import { OBJECT_WIDTH, OBJECT_HEIGHT } from "./oldHomeWrapper";
 import type { PantryItem } from "../../type/PantryItem";
 import { useRouter } from "next/navigation";
 import { useSnap } from "@/hooks/useSnap";
