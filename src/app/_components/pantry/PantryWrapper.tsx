@@ -10,33 +10,28 @@ import {
 import Image from "next/image";
 import Cabinet from "@/images/cabinet.png";
 import Fridge from "@/images/fridge.png";
+import Rack from "@/images/rack.png";
 import IngredientItem from "./IngredientItem";
+import RecipeRackItemComponent from "./RecipeRackItem";
 
 import { animate, motion, useMotionValue, type PanInfo } from "framer-motion";
 import usePantryStore from "@/store/pantry-store";
+import useRecipeRackStore from "@/store/recipe-rack-store";
 import type { PantryItem } from "@/type/PantryItem";
-import PantryTab from "./PantryTab";
+import type { RecipeRackItem } from "@/type/RecipeRackItem";
 import DragIndicators from "./DragIndicators";
 import Points from "./DebugPoints";
+import { SpringAnimation, type SpringConfig } from "@/app/constants/spring";
+import { acceptedViews, type ViewType } from "@/app/constants/view";
+import { useQueryState, parseAsStringLiteral } from "nuqs";
 
 export const OBJECT_WIDTH = 64;
 export const OBJECT_HEIGHT = 64;
 const SWIPE_THRESHOLD = 100;
 const VELOCITY_THRESHOLD = 50;
 
-const SpringAnimation = {
-  type: "spring",
-  stiffness: 200,
-  damping: 20,
-} as const;
-
-type SpringConfig = {
-  type: "spring";
-  stiffness: number;
-  damping: number;
-};
-
-const DEBUG_POINTS = false;
+const IMPACT_INTENSITY = 0.8;
+const DEBUG_POINTS = true;
 // Dynamic spring animation based on velocity
 const getDynamicSpringAnimation = (velocity: number) => {
   const absVelocity = Math.abs(velocity);
@@ -74,6 +69,17 @@ const containerVariants = {
 
 // Configuration for shelf positions (easily adjustable)
 const SHELF_CONFIG = {
+  rack: {
+    // Relative positions from top of container (0-1 range)
+    // Adjust these values to match the rack image shelves
+    shelfPositions: [0.2, 0.35, 0.5, 0.65, 0.8], // 5 shelves for recipe rack
+    // Horizontal bounds (relative to container width)
+    leftBound: 0.15, // 15% from left edge
+    rightBound: 0.85, // 85% from left edge (15% from right)
+    // Vertical padding from container edges
+    topPadding: 0.1, // 10% from top
+    bottomPadding: 0.1, // 10% from bottom
+  },
   fridge: {
     // Relative positions from top of container (0-1 range)
     // Adjust these values to match the fridge image shelves
@@ -100,7 +106,7 @@ const SHELF_CONFIG = {
 
 const calculateShelfPoints = (
   containerHeight: number,
-  storageType: "fridge" | "cabinet",
+  storageType: "rack" | "fridge" | "cabinet",
 ): { x?: number; y?: number }[] => {
   const config = SHELF_CONFIG[storageType];
 
@@ -122,16 +128,24 @@ const calculateShelfPoints = (
   return points;
 };
 
-type ViewType = "fridge" | "cabinet";
-
 export default function PantryWrapper() {
   const { fridgeItems, cabinetItems, initializeSync, seedWithDummyData } =
     usePantryStore();
-  const [currentView, setCurrentView] = useState<ViewType>("fridge");
+  const { rackItems, seedWithDefaultRecipes } = useRecipeRackStore();
+
+  const [isMounted, setIsMounted] = useState(false);
+  const [currentView, setCurrentView] = useQueryState<ViewType>(
+    "view",
+    parseAsStringLiteral(acceptedViews).withDefault("fridge"),
+  );
+  const rackAreaRef = useRef<HTMLDivElement>(null);
   const fridgeAreaRef = useRef<HTMLDivElement>(null);
   const cabinetAreaRef = useRef<HTMLDivElement>(null);
 
   // State for dynamic points
+  const [rackPoints, setRackPoints] = useState<{ x?: number; y?: number }[]>(
+    [],
+  );
   const [fridgePoints, setFridgePoints] = useState<
     { x?: number; y?: number }[]
   >([]);
@@ -139,9 +153,12 @@ export default function PantryWrapper() {
     { x?: number; y?: number }[]
   >([]);
 
-  // useEffect(() => {
-  //   seedWithDummyData();
-  // }, []);
+  // Initialize with dummy data on first load
+  useEffect(() => {
+    if (!rackItems.length) {
+      seedWithDefaultRecipes();
+    }
+  }, [rackItems.length, seedWithDefaultRecipes]);
 
   // Track window width to avoid SSR issues
   const [windowWidth, setWindowWidth] = useState(0);
@@ -151,37 +168,21 @@ export default function PantryWrapper() {
   const scaleXMotion = useMotionValue(1);
   const scaleYMotion = useMotionValue(1);
 
-  // Tab indicator motion values
-  const tabIndicatorX = useMotionValue(0);
-  const tabIndicatorScaleX = useMotionValue(1);
-  const tabIndicatorTranslateX = useMotionValue(0);
-
   // Initialize component and database sync on mount
   useLayoutEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
-    };
 
-    if (typeof window !== "undefined") {
-      handleResize();
-      containerX.set(currentView === "fridge" ? 0 : -window.innerWidth);
-
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }
-  }, [containerX, currentView]);
-
-  useEffect(() => {
-    initializeSync();
-  }, [initializeSync]);
-
-  // Calculate points when component mounts or window resizes
-  useLayoutEffect(() => {
-    const updatePoints = () => {
-      if (fridgeAreaRef.current && cabinetAreaRef.current) {
+      if (
+        rackAreaRef.current &&
+        fridgeAreaRef.current &&
+        cabinetAreaRef.current
+      ) {
+        const rackRect = rackAreaRef.current.getBoundingClientRect();
         const fridgeRect = fridgeAreaRef.current.getBoundingClientRect();
         const cabinetRect = cabinetAreaRef.current.getBoundingClientRect();
 
+        const newRackPoints = calculateShelfPoints(rackRect.height, "rack");
         const newFridgePoints = calculateShelfPoints(
           fridgeRect.height,
           "fridge",
@@ -191,14 +192,48 @@ export default function PantryWrapper() {
           "cabinet",
         );
 
+        setRackPoints(newRackPoints);
         setFridgePoints(newFridgePoints);
         setCabinetPoints(newCabinetPoints);
       }
     };
 
-    // Initial calculation
-    updatePoints();
-  }, [windowWidth]); // Depend on windowWidth instead of manual resize listener
+    if (typeof window !== "undefined") {
+      handleResize();
+
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, []);
+
+  useEffect(() => {
+    initializeSync();
+  }, [initializeSync]);
+
+  // Set initial position when component mounts and windowWidth is available
+  useEffect(() => {
+    if (windowWidth && !isMounted) {
+      let targetX = 0;
+      if (currentView === "fridge") targetX = -windowWidth;
+      else if (currentView === "cabinet") targetX = -2 * windowWidth;
+      // recipe view stays at 0
+
+      containerX.set(targetX);
+      setIsMounted(true);
+    }
+  }, [containerX, currentView, windowWidth, isMounted]);
+
+  // Handle currentView changes after initial mount
+  useEffect(() => {
+    if (!isMounted || !windowWidth) return;
+
+    let targetX = 0;
+    if (currentView === "fridge") targetX = -windowWidth;
+    else if (currentView === "cabinet") targetX = -2 * windowWidth;
+    // recipe view stays at 0
+
+    animate(containerX, targetX, SpringAnimation);
+  }, [containerX, currentView, windowWidth, isMounted]);
 
   // Drag indicator state
   const [isDragging, setIsDragging] = useState(false);
@@ -206,7 +241,6 @@ export default function PantryWrapper() {
     null,
   );
   const [dragProgress, setDragProgress] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
 
   const handleHorizontalDragStart = useCallback(() => {
@@ -230,62 +264,21 @@ export default function PantryWrapper() {
 
   const swipeTabs = useCallback(
     (
-      targetView: "fridge" | "cabinet",
+      targetView: ViewType,
       impactIntensity: number,
       springAnimation: SpringConfig | typeof SpringAnimation = SpringAnimation,
     ) => {
       setCurrentView(targetView);
 
       // Animate container to correct position
-      animate(
-        containerX,
-        targetView === "fridge" ? 0 : -windowWidth,
-        springAnimation,
-      );
+      let targetX = 0;
+      if (targetView === "fridge") targetX = -windowWidth;
+      else if (targetView === "cabinet") targetX = -2 * windowWidth;
+      // recipe view stays at 0
 
-      // Animate tab indicator to edge, then create impact
-      const indicatorDirection = targetView === "fridge" ? 40 : -40;
-      const translateDirection = targetView === "fridge" ? 2 : -2;
-
-      animate(tabIndicatorX, indicatorDirection, { duration: 0.15 }).then(
-        () => {
-          animate(tabIndicatorScaleX, 1 + impactIntensity * 0.15, {
-            duration: 0.08,
-          });
-          animate(
-            tabIndicatorTranslateX,
-            translateDirection * impactIntensity,
-            {
-              duration: 0.08,
-            },
-          );
-
-          setTimeout(() => {
-            animate(tabIndicatorScaleX, 1, {
-              duration: 0.2,
-              type: "spring",
-              stiffness: 400,
-              damping: 25,
-            });
-            animate(tabIndicatorTranslateX, 0, {
-              duration: 0.2,
-              type: "spring",
-              stiffness: 400,
-              damping: 25,
-            });
-            animate(tabIndicatorX, 0, springAnimation);
-          }, 80);
-        },
-      );
+      animate(containerX, targetX, springAnimation);
     },
-    [
-      setCurrentView,
-      containerX,
-      windowWidth,
-      tabIndicatorX,
-      tabIndicatorScaleX,
-      tabIndicatorTranslateX,
-    ],
+    [setCurrentView, containerX, windowWidth],
   );
 
   const handleHorizontalDragEnd = useCallback(
@@ -312,13 +305,17 @@ export default function PantryWrapper() {
         Math.abs(velocity.x) > VELOCITY_THRESHOLD;
 
       if (shouldSwitch) {
-        setIsTransitioning(true);
-
         const impactIntensity = Math.min(Math.abs(velocity.x) / 1000, 1);
 
-        if (currentView === "fridge" && offset.x < 0) {
+        if (currentView === "recipe" && offset.x < 0) {
+          // Swipe left from recipe to fridge - use dynamic spring
+          swipeTabs("fridge", impactIntensity, dynamicSpring);
+        } else if (currentView === "fridge" && offset.x < 0) {
           // Swipe left from fridge to cabinet - use dynamic spring
           swipeTabs("cabinet", impactIntensity, dynamicSpring);
+        } else if (currentView === "fridge" && offset.x > 0) {
+          // Swipe right from fridge to recipe - use dynamic spring
+          swipeTabs("recipe", impactIntensity, dynamicSpring);
         } else if (currentView === "cabinet" && offset.x > 0) {
           // Swipe right from cabinet to fridge - use dynamic spring
           swipeTabs("fridge", impactIntensity, dynamicSpring);
@@ -329,18 +326,13 @@ export default function PantryWrapper() {
         animate(scaleYMotion, 1, dynamicSpring);
 
         // Adjust timeout based on spring dynamics (higher velocity = faster animation)
-        const timeoutDuration = Math.max(200, 500 - Math.abs(velocity.x) / 10);
-        setTimeout(() => setIsTransitioning(false), timeoutDuration);
+        // const timeoutDuration = Math.max(200, 500 - Math.abs(velocity.x) / 10);
       } else {
-        // Bounce back with squish effect using dynamic spring
-        // setIsBouncing(true);
-
         // Animate container back to original position with velocity-based spring
-        const targetX = currentView === "fridge" ? 0 : -windowWidth;
+        let targetX = 0;
+        if (currentView === "fridge") targetX = -windowWidth;
+        else if (currentView === "cabinet") targetX = -2 * windowWidth;
         animate(containerX, targetX, dynamicSpring);
-
-        // Animate tab indicator back to center
-        animate(tabIndicatorX, 0, dynamicSpring);
 
         // Create velocity-based squish effect
         const velocityFactor = Math.min(Math.abs(velocity.x) / 1000, 1); // 0-1 based on velocity
@@ -382,31 +374,16 @@ export default function PantryWrapper() {
       scaleXMotion,
       scaleYMotion,
       swipeTabs,
-      tabIndicatorX,
       windowWidth,
       x,
     ],
   );
 
-  // Handle tab click with animation
-  const handleTabClick = useCallback(
-    (targetView: ViewType) => {
-      if (targetView === currentView || isTransitioning) return;
-      const impactIntensity = 0.8;
-
-      setIsTransitioning(true);
-      swipeTabs(targetView, impactIntensity);
-      setTimeout(() => setIsTransitioning(false), 400);
-    },
-    [currentView, isTransitioning, swipeTabs],
-  );
-
   return (
-    <div className="relative h-dvh overflow-hidden">
+    <>
       {/* Drag Indicators */}
       {isDragging && dragDirection && (
         <DragIndicators
-          currentView={currentView}
           dragDirection={dragDirection}
           dragPosition={dragPosition}
           isDragging={isDragging}
@@ -414,25 +391,52 @@ export default function PantryWrapper() {
         />
       )}
 
-      {/* View Title Indicator */}
-      <PantryTab
-        currentView={currentView}
-        handleTabClick={handleTabClick}
-        tabIndicatorScaleX={tabIndicatorScaleX}
-        tabIndicatorTranslateX={tabIndicatorTranslateX}
-      />
-
       {/* Container that holds both views side by side */}
       <motion.div
         drag="x"
-        dragConstraints={{ left: -windowWidth, right: 0 }}
+        dragConstraints={{ left: -2 * windowWidth, right: 0 }}
         dragElastic={0.1}
         onDragStart={handleHorizontalDragStart}
         onDrag={handleHorizontalDrag}
         onDragEnd={handleHorizontalDragEnd}
         className="flex h-full"
-        style={{ x: containerX, width: "200%" }}
+        style={{ x: containerX, width: "300%" }}
       >
+        {/* Recipe View */}
+        <motion.div
+          ref={rackAreaRef}
+          className="relative flex h-full w-[100vw] items-center justify-center p-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <Image
+            src={Rack}
+            alt="recipe rack"
+            width={1000}
+            height={1000}
+            className="mx-auto my-auto object-contain p-4"
+            style={{
+              alignSelf: "center",
+              justifySelf: "center",
+              maxWidth: "100%",
+              maxHeight: "100%",
+            }}
+            priority
+          />
+
+          {rackItems?.map((item: RecipeRackItem) => (
+            <RecipeRackItemComponent
+              key={`rack-${item.id}-${item.x}-${item.y}`}
+              item={item}
+              dragConstraints={rackAreaRef}
+              points={rackPoints}
+            />
+          ))}
+
+          {DEBUG_POINTS && <Points points={rackPoints} />}
+        </motion.div>
+
         {/* Fridge View */}
         <motion.div
           ref={fridgeAreaRef}
@@ -503,6 +507,6 @@ export default function PantryWrapper() {
           {DEBUG_POINTS && <Points points={cabinetPoints} />}
         </motion.div>
       </motion.div>
-    </div>
+    </>
   );
 }

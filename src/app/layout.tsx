@@ -4,6 +4,7 @@ import { type Metadata } from "next";
 import { Nunito_Sans } from "next/font/google";
 import { ViewTransitions } from "next-view-transitions";
 import Icon from "@/favicon.ico";
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
 export const metadata: Metadata = {
   title: {
@@ -26,7 +27,9 @@ export default function RootLayout({
   return (
     <ViewTransitions>
       <html lang="en" className={`${nunitoSans.variable}`}>
-        <body>{children}</body>
+        <body>
+          <NuqsAdapter>{children}</NuqsAdapter>
+        </body>
       </html>
     </ViewTransitions>
   );

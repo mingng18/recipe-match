@@ -1,29 +1,24 @@
-import {
-  motion,
-  useDragControls,
-  useMotionValue,
-  type PanInfo,
-} from "framer-motion";
+import { motion, useDragControls, useMotionValue } from "framer-motion";
 import { usePinch } from "@use-gesture/react";
 import { useCallback, useRef } from "react";
-import { OBJECT_WIDTH, OBJECT_HEIGHT } from "../oldHomeWrapper";
-import type { PantryItem } from "../../../type/PantryItem";
+import { OBJECT_WIDTH, OBJECT_HEIGHT } from "./PantryWrapper";
+import type { RecipeRackItem } from "@/type/RecipeRackItem";
 import { useRouter } from "next/navigation";
 import { useSnap } from "@/hooks/useSnap";
 import { unstable_ViewTransition as ViewTransition } from "react";
 import Image from "next/image";
-import usePantryStore from "@/store/pantry-store";
+import useRecipeRackStore from "@/store/recipe-rack-store";
 
-const IngredientItem = ({
+const RecipeRackItemComponent = ({
   item,
   dragConstraints,
   points,
 }: {
-  item: PantryItem;
+  item: RecipeRackItem;
   dragConstraints: React.RefObject<HTMLDivElement | null>;
   points: { x?: number; y?: number }[];
 }) => {
-  const { updatePantryItem } = usePantryStore();
+  const { updateRackItem } = useRecipeRackStore();
 
   const router = useRouter();
   const controls = useDragControls();
@@ -34,12 +29,13 @@ const IngredientItem = ({
     (x?: number, y?: number) => {
       // Only update if valid numbers are provided for both coordinates
       if (x !== undefined && y !== undefined && !isNaN(x) && !isNaN(y)) {
-        const newPantryItemPosition = {
+        const newRackItemPosition = {
           ...item,
           x: x, // Use absolute coordinates directly
           y: y, // Use absolute coordinates directly
+          updated_at: new Date(),
         };
-        updatePantryItem(newPantryItemPosition);
+        updateRackItem(newRackItemPosition);
       } else {
         console.warn("onSnapComplete received undefined or NaN coordinates:", {
           x,
@@ -47,7 +43,7 @@ const IngredientItem = ({
         });
       }
     },
-    [item, updatePantryItem],
+    [item, updateRackItem],
   );
 
   const { dragProps } = useSnap({
@@ -66,9 +62,9 @@ const IngredientItem = ({
   usePinch(
     ({ offset: [s], last }) => {
       itemScale.set(s);
-      // Only update database when gesture is complete
+      // Only update store when gesture is complete
       if (last) {
-        updatePantryItem({ ...item, scale: s });
+        updateRackItem({ ...item, scale: s, updated_at: new Date() });
       }
     },
     {
@@ -94,28 +90,34 @@ const IngredientItem = ({
       style={{
         top: item.y,
         left: item.x,
-        // transform: "translate(-50%, -50%)",
         zIndex: 10,
         scale: itemScale,
       }}
-      onClick={() => router.push(`/ingredient/${item.id}`)} // Navigate to the ingredient page on click
+      onClick={() => router.push(`/recipe/${item.recipeId}`)} // Navigate to the recipe page on click
     >
-      <ViewTransition name={`ingredient-image-${item.id}`}>
-        <Image
-          id={`ingredient-image-${item.id}`} // Unique ID for the image
-          src={item.image_url}
-          alt={item.name}
-          style={{
-            width: "auto",
-            height: `${OBJECT_HEIGHT}px`,
-            objectFit: "contain",
-          }} // Use CSS for sizing to avoid conflicts with transforms
-          className="pointer-events-none outline-img" // To ensure drag works on the parent motion.div
-          priority
-        />
+      <ViewTransition name={`recipe-image-${item.recipeId}`}>
+        <div className="relative">
+          <Image
+            id={`recipe-image-${item.id}`} // Unique ID for the image
+            src={item.imageUrl}
+            alt={item.title}
+            width={OBJECT_WIDTH}
+            height={OBJECT_HEIGHT}
+            style={{
+              width: `${OBJECT_WIDTH * 1.5}px`,
+              height: `${OBJECT_HEIGHT * 1.5}px`,
+            }}
+            className="outline-img pointer-events-none rounded-md object-cover shadow-md" // To ensure drag works on the parent motion.div
+            priority
+          />
+          {/* Recipe title overlay */}
+          {/* <div className="bg-opacity-70 pointer-events-none absolute right-0 bottom-0 left-0 rounded-b-lg bg-black p-1 text-xs text-white">
+            <p className="truncate font-medium">{item.title}</p>
+          </div> */}
+        </div>
       </ViewTransition>
     </motion.div>
   );
 };
 
-export default IngredientItem;
+export default RecipeRackItemComponent;

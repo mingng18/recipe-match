@@ -2,32 +2,23 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import usePantryStore from "@/store/pantry-store";
+import Counter from "@/components/react-bits/Counter";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Plus,
   Minus,
-  ChevronRightIcon,
   ChevronLeftIcon,
   Refrigerator,
   Beef,
-  BookOpen,
-  Clock,
-  Users,
-  Star,
-  Leaf,
-  Thermometer,
-  ShieldCheck,
   ChefHat,
 } from "lucide-react";
 import type { PantryItem } from "@/type/PantryItem";
 import type { Recipe } from "@/lib/dummy-recipes";
 import { dummyRecipesData } from "@/lib/dummy-recipes";
 import { unstable_ViewTransition as ViewTransition } from "react";
-import usePantryStore from "@/store/pantry-store";
-import { notFound, useRouter } from "next/navigation";
-import Counter from "@/components/react-bits/Counter";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 
 export default function IngredientWrapper({ id }: { id: number }) {
@@ -167,7 +158,7 @@ export default function IngredientWrapper({ id }: { id: number }) {
         </div>
         <Separator className="my-6" />
 
-                {/* Related Recipes Section */}
+        {/* Related Recipes Section */}
         <section className="mt-8 mb-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -182,19 +173,21 @@ export default function IngredientWrapper({ id }: { id: number }) {
               </Link>
             )}
           </div>
-          
+
           {relatedRecipes.length > 0 ? (
             <div className="space-y-3">
               {relatedRecipes.map((recipe) => (
                 <Link key={recipe.id} href={`/recipe/${recipe.id}`}>
                   <div className="flex items-center justify-between py-3">
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 mb-1">
+                      <h3 className="mb-1 font-medium text-gray-900">
                         {recipe.title}
                       </h3>
                       <div className="flex items-center gap-3 text-sm text-gray-500">
                         {totalTime(recipe) && <span>{totalTime(recipe)}</span>}
-                        {recipe.servings && <span>{recipe.servings} servings</span>}
+                        {recipe.servings && (
+                          <span>{recipe.servings} servings</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -217,23 +210,24 @@ export default function IngredientWrapper({ id }: { id: number }) {
 
         <Separator className="my-6" />
 
-                <section className="mb-6">
+        <section className="mb-6">
           <h2 className="mb-4 text-xl font-semibold text-gray-900">
             How to keep fresh
           </h2>
-          
+
           {ingredient?.steps_to_store &&
           ingredient.steps_to_store.length > 0 ? (
             <div className="space-y-3">
               {ingredient.steps_to_store.map((step, index) => (
-                <div key={step.id} className="flex items-center justify-between py-3">
+                <div
+                  key={step.id}
+                  className="flex items-center justify-between py-3"
+                >
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 mb-1">
+                    <h4 className="mb-1 font-medium text-gray-900">
                       {step.title}
                     </h4>
-                    <p className="text-sm text-gray-600">
-                      {step.description}
-                    </p>
+                    <p className="text-sm text-gray-600">{step.description}</p>
                   </div>
                 </div>
               ))}
@@ -242,15 +236,19 @@ export default function IngredientWrapper({ id }: { id: number }) {
             <div className="space-y-3">
               <div className="flex items-center justify-between py-3">
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 mb-1">Store Cool</h4>
-                  <p className="text-sm text-gray-600">Keep at proper temperature</p>
+                  <h4 className="mb-1 font-medium text-gray-900">Store Cool</h4>
+                  <p className="text-sm text-gray-600">
+                    Keep at proper temperature
+                  </p>
                 </div>
               </div>
               <div className="flex items-center justify-between py-3">
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 mb-1">Stay Fresh</h4>
+                  <h4 className="mb-1 font-medium text-gray-900">Stay Fresh</h4>
                   <p className="text-sm text-gray-600">
-                    Store in {ingredient?.type === "fridge" ? "refrigerator" : "cabinet"} for best freshness
+                    Store in{" "}
+                    {ingredient?.type === "fridge" ? "refrigerator" : "cabinet"}{" "}
+                    for best freshness
                   </p>
                 </div>
               </div>
@@ -260,24 +258,26 @@ export default function IngredientWrapper({ id }: { id: number }) {
 
         <Separator className="my-6" />
 
-                <section className="mb-6">
+        <section className="mb-6">
           <h2 className="mb-4 text-xl font-semibold text-gray-900">
             Popular with this ingredient
           </h2>
-          
+
           {relatedRecipes.length > 0 ? (
             <div className="space-y-3">
               <Link href={`/recipe/${relatedRecipes[0]!.id}`}>
                 <div className="flex items-center justify-between py-3">
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900 mb-1">
+                    <h3 className="mb-1 font-medium text-gray-900">
                       {relatedRecipes[0]!.title}
                     </h3>
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                    <p className="mb-2 line-clamp-2 text-sm text-gray-600">
                       {relatedRecipes[0]!.description}
                     </p>
                     <div className="flex items-center gap-3 text-sm text-gray-500">
-                      {totalTime(relatedRecipes[0]!) && <span>{totalTime(relatedRecipes[0]!)}</span>}
+                      {totalTime(relatedRecipes[0]!) && (
+                        <span>{totalTime(relatedRecipes[0]!)}</span>
+                      )}
                       <span>★ 4.8</span>
                     </div>
                   </div>

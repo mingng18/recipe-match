@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import RecipeStepCards from "./RecipeStepCards"; // This should be adjusted if its path relative to _components changes
 import BottomAppBar from "./BottomAppBar"; // Import the new BottomAppBar
+import { unstable_ViewTransition as ViewTransition } from "react";
+import { useRouter } from "next/navigation";
 
 interface RecipeDetailClientProps {
   recipe: Recipe;
@@ -26,6 +28,7 @@ interface RecipeDetailClientProps {
 export default function RecipeDetailClient({
   recipe,
 }: RecipeDetailClientProps) {
+  const router = useRouter();
   const [isFavorited, setIsFavorited] = React.useState(false);
 
   // All the JSX from the original return statement of page.tsx will go here
@@ -34,26 +37,28 @@ export default function RecipeDetailClient({
     <div className="bg-background pb-16">
       {/* Increased padding-bottom to accommodate the app bar */}
       <div className="relative h-72 w-full md:h-96">
-        {recipe.imageUrl && (
-          <Image
-            src={recipe.imageUrl}
-            alt={recipe.title}
-            layout="fill"
-            objectFit="cover"
-            className="brightness-90"
-            style={{ viewTransitionName: `recipe-image-${recipe.id}` }}
-          />
-        )}
+        <ViewTransition name={`recipe-image-${recipe.id}`}>
+          {recipe.imageUrl && (
+            <Image
+              src={recipe.imageUrl}
+              alt={recipe.title}
+              layout="fill"
+              objectFit="cover"
+              className="brightness-90"
+              style={{ viewTransitionName: `recipe-image-${recipe.id}` }}
+            />
+          )}
+        </ViewTransition>
+
         <div className="absolute top-0 right-0 left-0 z-10 flex items-center justify-between p-4">
           <Button
             asChild
             variant="ghost"
             size="icon"
             className="rounded-full bg-black/30 text-white hover:bg-black/50"
+            onClick={() => router.back()}
           >
-            <Link href="/recipes">
-              <ArrowLeft size={24} />
-            </Link>
+            <ArrowLeft size={24} />
           </Button>
           <Button
             variant="ghost"
