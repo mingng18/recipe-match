@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Cabinet from "@/images/cabinet.png";
 import Fridge from "@/images/fridge.png";
-import IngredientItem from "./IngredientItem";
+import IngredientItem from "./pantry/IngredientItem";
 
 import { animate, motion, useMotionValue, type PanInfo } from "framer-motion";
 import usePantryStore from "@/store/pantry-store";

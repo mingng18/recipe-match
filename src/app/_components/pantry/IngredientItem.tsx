@@ -6,8 +6,8 @@ import {
 } from "framer-motion";
 import { usePinch } from "@use-gesture/react";
 import { useCallback, useRef } from "react";
-import { OBJECT_WIDTH, OBJECT_HEIGHT } from "./oldHomeWrapper";
-import type { PantryItem } from "../../type/PantryItem";
+import { OBJECT_WIDTH, OBJECT_HEIGHT } from "../oldHomeWrapper";
+import type { PantryItem } from "../../../type/PantryItem";
 import { useRouter } from "next/navigation";
 import { useSnap } from "@/hooks/useSnap";
 import { unstable_ViewTransition as ViewTransition } from "react";
@@ -103,7 +103,7 @@ const IngredientItem = ({
       <ViewTransition name={`ingredient-image-${item.id}`}>
         <Image
           id={`ingredient-image-${item.id}`} // Unique ID for the image
-          src={item.imageUrl}
+          src={item.image_url}
           alt={item.name}
           style={{
             width: "auto",

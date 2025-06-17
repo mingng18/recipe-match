@@ -3,12 +3,16 @@ import "@/styles/globals.css";
 import { type Metadata } from "next";
 import { Nunito_Sans } from "next/font/google";
 import { ViewTransitions } from "next-view-transitions";
+import Icon from "@/favicon.ico";
 
 export const metadata: Metadata = {
-  title: "Recipe Matcher",
+  title: {
+    template: "%s - Recipisu",
+    default: "Recipisu",
+  },
   description: "Find recipes based on your ingredients!",
   manifest: "/manifest.json",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: [{ rel: "icon", url: Icon.src }],
 };
 
 const nunitoSans = Nunito_Sans({

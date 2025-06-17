@@ -6,9 +6,6 @@ import {
   useMotionValueEvent,
   useTransform,
 } from "framer-motion";
-import { Volume, Volume2 } from "lucide-react";
-
-import "./ElasticSlider.css";
 
 const MAX_OVERFLOW = 50;
 
@@ -30,11 +27,13 @@ const ElasticSlider: React.FC<ElasticSliderProps> = ({
   className = "",
   isStepped = false,
   stepSize = 1,
-  leftIcon = <Volume />,
-  rightIcon = <Volume2 />,
+  leftIcon = <>-</>,
+  rightIcon = <>+</>,
 }) => {
   return (
-    <div className={`slider-container ${className}`}>
+    <div
+      className={`flex w-48 flex-col items-center justify-center gap-4 ${className}`}
+    >
       <Slider
         defaultValue={defaultValue}
         startingValue={startingValue}
@@ -137,7 +136,7 @@ const Slider: React.FC<SliderProps> = ({
           scale,
           opacity: useTransform(scale, [1, 1.2], [0.7, 1]),
         }}
-        className="slider-wrapper"
+        className="flex w-full touch-none items-center justify-center gap-4 select-none"
       >
         <motion.div
           animate={{
@@ -155,7 +154,7 @@ const Slider: React.FC<SliderProps> = ({
 
         <div
           ref={sliderRef}
-          className="slider-root"
+          className="relative flex w-full max-w-xs flex-grow cursor-grab touch-none items-center py-4 select-none"
           onPointerMove={handlePointerMove}
           onPointerDown={handlePointerDown}
           onPointerUp={handlePointerUp}
@@ -182,11 +181,11 @@ const Slider: React.FC<SliderProps> = ({
               marginTop: useTransform(scale, [1, 1.2], [0, -3]),
               marginBottom: useTransform(scale, [1, 1.2], [0, -3]),
             }}
-            className="slider-track-wrapper"
+            className="flex flex-grow"
           >
-            <div className="slider-track">
+            <div className="relative h-full flex-grow overflow-hidden rounded-full bg-gray-400">
               <div
-                className="slider-range"
+                className="absolute h-full rounded-full bg-gray-500"
                 style={{ width: `${getRangePercentage()}%` }}
               />
             </div>
@@ -207,7 +206,9 @@ const Slider: React.FC<SliderProps> = ({
           {rightIcon}
         </motion.div>
       </motion.div>
-      <p className="value-indicator">{Math.round(value)}</p>
+      <p className="absolute -translate-y-4 transform text-xs font-medium tracking-wide text-gray-400">
+        {Math.round(value)}
+      </p>
     </>
   );
 };
