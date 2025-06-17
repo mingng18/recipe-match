@@ -7,7 +7,7 @@ export class DB extends Dexie {
     super("pantry-db");
     this.version(1).stores({
       pantryItems:
-        "++id, name, quantity, expiry_date, category, image_url, x, y, scale, created_at, updated_at, steps_to_store",
+        "++id, name, quantity, expiry_date, category, type, image_url, x, y, scale, created_at, updated_at, steps_to_store",
     });
   }
 }
